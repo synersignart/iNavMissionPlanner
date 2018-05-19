@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">iNavMissionPlanner</string>
+    <string name="action_settings">Settings</string>
+    <string name="scanning">Scanning</string>
+    <string name="device_name">Devicename</string>
+    <string name="select_device">Select device</string>
+    <string name="none_found">None found</string>
+    <string name="none_paired">None paired</string>
+    <string name="bt_scan">Scan</string>
+    <string name="bt_paired_devices">Paired devices</string>
+    <string name="bt_new_devices">New devices</string>
+    <string name="bt_show_devices">Devices</string>
+    <string name="bt_connect">Connect</string>
+    <string name="bt_not_available">BT not available</string>
+    <string name="connecting">Connecting..</string>
+    <string name="connected">Connected</string>
+    <string name="bt_unable_to_connect">Unable to connect</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="Uploading">uploading</string>
+    <string name="PleaseWait">please wait</string>
+</resources>
