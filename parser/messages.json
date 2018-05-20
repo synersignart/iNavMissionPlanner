@@ -1,0 +1,44 @@
+{
+  "MSP_LOOP_TIME": [{"ID": 73},
+                {"comment": ""}, 
+                {"cycletime": "short"}]
+,
+  "MSP_STATUS": [{"ID": 101},
+                {"comment": ""}, 
+                {"cycletime": "short"},
+				{"i2cErrorCount": "short"},
+				{"sensorStatus": "short"},
+				{"boxModeFlags": "int"},
+				{"profile": "byte"}
+				]
+,
+  "MSP_STATUS_EX": [{"ID": 150},
+    {"comment": ""},
+    {"cycletime": "short"},
+    {"i2cErrorCount": "short"},
+    {"sensorStatus": "short"},
+    {"boxModeFlags": "int"},
+    {"profile": "byte"},
+    {"systemload": "short"},
+    {"armingFlags": "short"},
+    {"accCalibrationArmingFlags": "byte"}
+  ]
+,
+  "MSP_SONAR_ALTITUDE": [{"ID": 58},
+    {"comment": ""},
+    {"altitude": "int"}
+  ]
+,
+  "MSP_RAW_GPS": [{"ID": 106},
+    {"comment": ""},
+    {"fixType": "byte"},
+    {"numSat": "byte"},
+    {"lat": "int"},
+    {"lon": "int"},
+    {"alt": "short"},
+    {"groundSpeed": "short"},
+    {"groundCourse": "short"},
+    {"hdop": "short"}
+  ]
+
+}

@@ -12,6 +12,8 @@
     <string name="bt_show_devices">Devices</string>
     <string name="bt_connect">Connect</string>
     <string name="bt_not_available">BT not available</string>
+    <string name="bt_connection_failure">"Connection failure"</string>
+    <string name="bt_starting">starting Bluetooth</string>
     <string name="connecting">Connecting..</string>
     <string name="connected">Connected</string>
     <string name="bt_unable_to_connect">Unable to connect</string>

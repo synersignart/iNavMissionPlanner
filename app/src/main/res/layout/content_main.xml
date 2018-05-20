@@ -1,21 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_main"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    tools:layout_editor_absoluteY="81dp"
+    tools:showIn="@layout/activity_main">
 
-    <TextView
+    <CheckBox
+        android:id="@+id/cbConnected"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/connected"
+        app:layout_constraintBottom_toTopOf="@+id/cbMagPresent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <CheckBox
+        android:id="@+id/cbAccPresent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="acc"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+
+    <CheckBox
+        android:id="@+id/cbBaroPresent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="baro"
+        app:layout_constraintStart_toEndOf="@+id/cbMagPresent"
+        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+
+    <CheckBox
+        android:id="@+id/cbSonarPresent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:text="sonar"
+        app:layout_constraintStart_toEndOf="@+id/cbBaroPresent"
+        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+
+    <CheckBox
+        android:id="@+id/cbGpsPresent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="gps"
+        app:layout_constraintStart_toEndOf="@+id/cbSonarPresent"
+        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+
+    <CheckBox
+        android:id="@+id/cbMagPresent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="mag"
+        app:layout_constraintStart_toEndOf="@+id/cbAccPresent"
+        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="Cycle:"
+        app:layout_constraintBottom_toBottomOf="@+id/cbConnected"
+        app:layout_constraintStart_toEndOf="@+id/cbConnected"
+        app:layout_constraintTop_toTopOf="@+id/cbConnected" />
+
+    <TextView
+        android:id="@+id/tvCycleTime"
+        android:layout_width="51dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="?"
+        app:layout_constraintBottom_toBottomOf="@+id/textView"
+        app:layout_constraintStart_toEndOf="@+id/textView"
+        app:layout_constraintTop_toTopOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:text="Sonar Altitude:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cbAccPresent" />
+
+    <TextView
+        android:id="@+id/tvSonarAlt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="?"
+        app:layout_constraintBottom_toBottomOf="@+id/textView2"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toTopOf="@+id/textView2" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="GPS Sats:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+    <TextView
+        android:id="@+id/tvGpsSats"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="?"
+        app:layout_constraintBottom_toBottomOf="@+id/textView4"
+        app:layout_constraintStart_toEndOf="@+id/textView4"
+        app:layout_constraintTop_toTopOf="@+id/textView4" />
+
+    <CheckBox
+        android:id="@+id/cbGps2dFix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:text="2d"
+        app:layout_constraintBottom_toBottomOf="@+id/tvGpsSats"
+        app:layout_constraintStart_toEndOf="@+id/tvGpsSats"
+        app:layout_constraintTop_toTopOf="@+id/tvGpsSats"
+        app:layout_constraintVertical_bias="0.615" />
+
+    <CheckBox
+        android:id="@+id/cbGps3dFix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="3d"
+        app:layout_constraintBottom_toBottomOf="@+id/cbGps2dFix"
+        app:layout_constraintStart_toEndOf="@+id/cbGps2dFix"
+        app:layout_constraintTop_toTopOf="@+id/cbGps2dFix" />
+
+    <TextView
+        android:id="@+id/tvGpsPos"
+        android:layout_width="365dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="?"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+
+    <TextView
+        android:id="@+id/tvTxRx"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="?"
+        app:layout_constraintBottom_toBottomOf="@+id/tvCycleTime"
+        app:layout_constraintStart_toEndOf="@+id/tvCycleTime"
+        app:layout_constraintTop_toTopOf="@+id/tvCycleTime" />
 
 </android.support.constraint.ConstraintLayout>
