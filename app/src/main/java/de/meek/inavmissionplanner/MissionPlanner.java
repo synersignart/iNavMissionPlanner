@@ -3,6 +3,9 @@ package de.meek.inavmissionplanner;
 import android.content.Context;
 import android.os.Handler;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 public class MissionPlanner {
 
     private String m_macAddress = null;
@@ -11,6 +14,7 @@ public class MissionPlanner {
     public static MissionPlanner m_app = null;
     private IComm m_comm = null;
     private int m_refreshRate = 500;
+    private int m_sendRate = 20;
     private MspHandler m_mspHandler = new MspHandler();
 
     public MissionPlanner(Context context, Handler handler)
@@ -33,18 +37,41 @@ public class MissionPlanner {
         m_threadSender.start();
     }
 
+    public void disconnect() {
+        m_comm.close();
+    }
+
     public void setMAC(String mac) {
         m_macAddress = mac;
     }
 
+    LinkedList<byte[]> m_requests = new LinkedList<>();
+
     public void request(byte[] data) {
-        m_comm.write(data);
-        try {
-            Thread.sleep(m_refreshRate);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        synchronized (m_requests) {
+            m_requests.addLast(data);
         }
     }
+
+    Runnable m_runnableCyclicRequest = new Runnable() {
+        @Override
+        public void run() {
+
+            while(m_comm.isConnected()) {
+
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                request(m_mspHandler.serialize_MSP_STATUS_Request());
+                request(m_mspHandler.serialize_MSP_SONAR_ALTITUDE_Request());
+                request(m_mspHandler.serialize_MSP_RAW_GPS_Request());
+                request(m_mspHandler.serialize_MSP_RC_Request());
+            }
+        }
+    };
 
     Runnable m_runnableSender = new Runnable() {
         @Override
@@ -52,14 +79,29 @@ public class MissionPlanner {
 
             ((BluetoothComm)m_comm).connect(m_macAddress, m_serialPortBaudRate);
 
-            m_threadReceiver = new Thread(m_runnableReceiver);
-            m_threadReceiver.start();
+            if (m_comm.isConnected()) {
+                m_threadReceiver = new Thread(m_runnableReceiver);
+                m_threadReceiver.start();
+                m_threadCyclicRequest = new Thread(m_runnableCyclicRequest);
+                m_threadCyclicRequest.start();
+            }
 
-            while(true) {
+            while(m_comm.isConnected()) {
 
-                request(m_mspHandler.serialize_MSP_STATUS_Request());
-                request(m_mspHandler.serialize_MSP_SONAR_ALTITUDE_Request());
-                request(m_mspHandler.serialize_MSP_RAW_GPS_Request());
+                byte[] data = null;
+                synchronized (m_requests) {
+                    if (!m_requests.isEmpty()) {
+                        data = m_requests.removeFirst();
+                        m_comm.write(data);
+                    }
+                }
+
+
+                try {
+                    Thread.sleep(m_sendRate);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     };
@@ -68,7 +110,7 @@ public class MissionPlanner {
         @Override
         public void run() {
 
-            while(true) {
+            while(m_comm.isConnected()) {
 
                 while (m_comm.dataAvailable()) {
                     byte b = m_comm.read();
@@ -84,7 +126,7 @@ public class MissionPlanner {
         }
     };
 
+    Thread m_threadCyclicRequest = null;
     Thread m_threadSender = null;
     Thread m_threadReceiver = null;
-
 }

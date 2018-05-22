@@ -1,11 +1,27 @@
 package de.meek.inavmissionplanner;
 
+import android.os.Handler;
+import android.os.Message;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+
+import edu.wlu.cs.msppg.MSP_MODE_RANGES_Handler;
 import edu.wlu.cs.msppg.MSP_RAW_GPS_Handler;
+import edu.wlu.cs.msppg.MSP_RC_Handler;
+import edu.wlu.cs.msppg.MSP_SET_MODE_RANGE_Handler;
 import edu.wlu.cs.msppg.MSP_SONAR_ALTITUDE_Handler;
 import edu.wlu.cs.msppg.MSP_STATUS_Handler;
 import edu.wlu.cs.msppg.Parser;
 
-public class MspHandler extends Parser implements MSP_STATUS_Handler, MSP_SONAR_ALTITUDE_Handler, MSP_RAW_GPS_Handler {
+public class MspHandler extends Parser implements
+        MSP_STATUS_Handler,
+        MSP_SONAR_ALTITUDE_Handler,
+        MSP_RAW_GPS_Handler,
+        MSP_RC_Handler,
+        MSP_SET_MODE_RANGE_Handler,
+        MSP_MODE_RANGES_Handler
+{
 
     public boolean accPresent = false;
     public boolean baroPresent = false;
@@ -19,11 +35,23 @@ public class MspHandler extends Parser implements MSP_STATUS_Handler, MSP_SONAR_
     public boolean gpsFix3d = false;
     public int gpsLat = 0;
     public int gpsLon = 0;
+    public short rcRoll = 0;
+    public short rcPitch = 0;
+    public short rcYaw = 0;
+    public short rcThrottle = 0;
+    public short rcAux1 = 0;
+    public short rcAux2 = 0;
+    public short rcAux3 = 0;
+    public short rcAux4 = 0;
+
+    public ArrayList<BoxMode> boxModeList = new ArrayList<>();
 
     public MspHandler() {
         set_MSP_STATUS_Handler(this);
         set_MSP_SONAR_ALTITUDE_Handler(this);
         set_MSP_RAW_GPS_Handler(this);
+        set_MSP_RC_Handler(this);
+        set_MSP_MODE_RANGES_Handler(this);
     }
 
     @Override
@@ -49,5 +77,50 @@ public class MspHandler extends Parser implements MSP_STATUS_Handler, MSP_SONAR_
     @Override
     public void handle_MSP_SONAR_ALTITUDE(int altitude) {
         this.sonarAltitude = altitude;
+    }
+
+    @Override
+    public void handle_MSP_RC(short roll, short pitch, short yaw, short throttle, short aux1, short aux2, short aux3) {
+        this.rcRoll = roll;
+        this.rcPitch = pitch;
+        this.rcYaw = yaw;
+        this.rcThrottle = throttle;
+        this.rcAux1 = aux1;
+        this.rcAux2 = aux2;
+        this.rcAux3 = aux3;
+    }
+
+    @Override
+    public void handle_MSP_SET_MODE_RANGE(byte n, byte box, byte aux, byte start, byte end) {
+
+    }
+
+    @Override
+    public void handle_MSP_MODE_RANGES(ByteBuffer data) {
+
+        synchronized (boxModeList) {
+            boxModeList.clear();
+            int count = data.position();
+            count = count / 4;
+            for (int i=0; i<count; i++) {
+                byte box = data.get(0 + (i*4));
+                byte aux = data.get(1 + (i*4));
+                byte min = data.get(2 + (i*4));
+                byte max = data.get(3 + (i*4));
+                boxModeList.add(new BoxMode(i, box, aux, min, max));
+            }
+        }
+        if (h!=null) {
+            Message msg = new Message();
+            msg.obj = 1;
+            h.sendMessage(msg);
+
+        }
+    }
+
+    Handler h;
+    public void registerModeRangeCB(Handler h)
+    {
+        this.h = h;
     }
 }

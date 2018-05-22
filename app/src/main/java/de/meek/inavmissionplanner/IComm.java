@@ -7,4 +7,5 @@ public interface IComm {
     public boolean dataAvailable();
     public int rx();
     public int tx();
+    public void close();
 }

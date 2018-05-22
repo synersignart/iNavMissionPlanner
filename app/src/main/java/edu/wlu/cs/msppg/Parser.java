@@ -1,115 +1,143 @@
 // AUTO-GENERATED CODE: DO NOT EDIT!!!
 
-package edu.wlu.cs.msppg;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.io.ByteArrayOutputStream;
-
-public class Parser {
-
-    private int state;
-    private byte message_direction;
-    private byte message_id;
-    private byte message_length_expected;
-    private byte message_length_received;
-    private ByteArrayOutputStream message_buffer;
-    private byte message_checksum;
-
-    public Parser() {
-
-        this.state = 0;
-        this.message_buffer = new ByteArrayOutputStream();
-    }
-
-    private static ByteBuffer newByteBuffer(int capacity) {
-        ByteBuffer bb = ByteBuffer.allocate(capacity);
-        bb.order(ByteOrder.LITTLE_ENDIAN);
-        return bb;
-    }
-
-   private static byte CRC8(byte [] data, int beg, int end) {
-
-        int crc = 0x00;
-
-        for (int k=beg; k<end; ++k) {
-
-            int extract = (int)data[k] & 0xFF;
-
-            crc ^= extract;
-        }
-
-        return (byte)crc;
-    }
-
-    public void parse(byte b) {
-
-        switch (this.state) {
-
-            case 0:               // sync char 1
-                if (b == 36) { // $
-                    this.state++;
-                }
-                break;        
-
-            case 1:               // sync char 2
-                if (b == 77) { // M
-                    this.state++;
-                }
-                else {            // restart and try again
-                    this.state = 0;
-                }
-                break;
-
-            case 2:               // direction (should be >)
-                if (b == 62) { // >
-                    this.message_direction = 1;
-                }
-                else {            // <
-                    this.message_direction = 0;
-                }
-                this.state++;
-                break;
-
-            case 3:
-                this.message_length_expected = b;
-                this.message_checksum = b;
-                // setup arraybuffer
-                this.message_length_received = 0;
-                this.state++;
-                break;
-
-            case 4:
-                this.message_id = b;
-                this.message_checksum ^= b;
-                this.message_buffer.reset();
-                if (this.message_length_expected > 0) {
-                    // process payload
-                    this.state++;
-                }
-                else {
-                    // no payload
-                    this.state += 2;
-                }
-                break;
-
-            case 5: // payload
-                this.message_buffer.write(b);
-                this.message_checksum ^= b;
-                this.message_length_received++;
-                if (this.message_length_received >= this.message_length_expected) {
-                    this.state++;
-                }
-                break;
-
-            case 6:
-                this.state = 0;
-                if (this.message_checksum == b) {
-
-                    ByteBuffer bb = newByteBuffer(this.message_length_received);
-                    bb.put(this.message_buffer.toByteArray(), 0, this.message_length_received);
-
-                    switch (this.message_id) {
+package edu.wlu.cs.msppg;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.io.ByteArrayOutputStream;
+
+public class Parser {
+
+    private int state;
+    private byte message_direction;
+    private byte message_id;
+    private byte message_length_expected;
+    private byte message_length_received;
+    private ByteArrayOutputStream message_buffer;
+    private byte message_checksum;
+
+    public Parser() {
+
+        this.state = 0;
+        this.message_buffer = new ByteArrayOutputStream();
+    }
+
+    private static ByteBuffer newByteBuffer(int capacity) {
+        ByteBuffer bb = ByteBuffer.allocate(capacity);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        return bb;
+    }
+
+   private static byte CRC8(byte [] data, int beg, int end) {
+
+        int crc = 0x00;
+
+        for (int k=beg; k<end; ++k) {
+
+            int extract = (int)data[k] & 0xFF;
+
+            crc ^= extract;
+        }
+
+        return (byte)crc;
+    }
+
+    private static byte CRC_dvb_s2(byte [] data, int beg, int end) {
+        int crc = 0;
+        for (int k=beg; k<end; ++k) {
+
+            byte a = data[k];
+            crc ^= a;
+            for (int ii = 0; ii < 8; ++ii) {
+                if ((crc & 0x80) > 0) {
+                    crc = (crc << 1) ^ 0xD5;
+                } else {
+                    crc = crc << 1;
+                }
+            }
+        }
+        return (byte)crc;
+    }
+
+    public void parse(byte b) {
+
+        switch (this.state) {
+
+            case 0:               // sync char 1
+                if (b == 36) { // $
+                    this.state++;
+                }
+                break;        
+
+            case 1:               // sync char 2
+                if (b == 77) { // M
+                    this.state++;
+                }
+                else {            // restart and try again
+                    this.state = 0;
+                }
+                break;
+
+            case 2:               // direction (should be >)
+                if (b == 62) { // >
+                    this.message_direction = 1;
+                }
+                else {            // <
+                    this.message_direction = 0;
+                }
+                this.state++;
+                break;
+
+            case 3:
+                this.message_length_expected = b;
+                this.message_checksum = b;
+                // setup arraybuffer
+                this.message_length_received = 0;
+                this.state++;
+                break;
+
+            case 4:
+                this.message_id = b;
+                this.message_checksum ^= b;
+                this.message_buffer.reset();
+                if (this.message_length_expected > 0) {
+                    // process payload
+                    this.state++;
+                }
+                else {
+                    // no payload
+                    this.state += 2;
+                }
+                break;
+
+            case 5: // payload
+                this.message_buffer.write(b);
+                this.message_checksum ^= b;
+                this.message_length_received++;
+                if (this.message_length_received >= this.message_length_expected) {
+                    this.state++;
+                }
+                break;
+
+            case 6:
+                this.state = 0;
+                if (this.message_checksum == b) {
+
+                    ByteBuffer bb = newByteBuffer(this.message_length_received);
+                    bb.put(this.message_buffer.toByteArray(), 0, this.message_length_received);
+
+                    switch (this.message_id) {
+                        case (byte)101:
+                            if (this.MSP_STATUS_handler != null) {
+                                this.MSP_STATUS_handler.handle_MSP_STATUS(
+                                bb.getShort(0),
+                                bb.getShort(2),
+                                bb.getShort(4),
+                                bb.getInt(6),
+                                bb.get(10));
+                            }
+                            break;
+
                         case (byte)150:
                             if (this.MSP_STATUS_EX_handler != null) {
                                 this.MSP_STATUS_EX_handler.handle_MSP_STATUS_EX(
@@ -124,28 +152,27 @@ public class Parser {
                             }
                             break;
 
-                        case (byte)121:
-                            if (this.RC_NORMAL_handler != null) {
-                                this.RC_NORMAL_handler.handle_RC_NORMAL(
-                                bb.getFloat(0),
-                                bb.getFloat(4),
-                                bb.getFloat(8),
-                                bb.getFloat(12),
-                                bb.getFloat(16),
-                                bb.getFloat(20),
-                                bb.getFloat(24),
-                                bb.getFloat(28));
+                        case (byte)35:
+                            if (this.MSP_SET_MODE_RANGE_handler != null) {
+                                this.MSP_SET_MODE_RANGE_handler.handle_MSP_SET_MODE_RANGE(
+                                bb.get(0),
+                                bb.get(1),
+                                bb.get(2),
+                                bb.get(3),
+                                bb.get(4));
                             }
                             break;
 
-                        case (byte)101:
-                            if (this.MSP_STATUS_handler != null) {
-                                this.MSP_STATUS_handler.handle_MSP_STATUS(
+                        case (byte)105:
+                            if (this.MSP_RC_handler != null) {
+                                this.MSP_RC_handler.handle_MSP_RC(
                                 bb.getShort(0),
                                 bb.getShort(2),
                                 bb.getShort(4),
-                                bb.getInt(6),
-                                bb.get(10));
+                                bb.getShort(6),
+                                bb.getShort(8),
+                                bb.getShort(10),
+                                bb.getShort(12));
                             }
                             break;
 
@@ -177,40 +204,67 @@ public class Parser {
                             }
                             break;
 
-                        case (byte)122:
-                            if (this.ATTITUDE_RADIANS_handler != null) {
-                                this.ATTITUDE_RADIANS_handler.handle_ATTITUDE_RADIANS(
-                                bb.getFloat(0),
-                                bb.getFloat(4),
-                                bb.getFloat(8));
+                        case (byte)34:
+                            if (this.MSP_MODE_RANGES_handler != null) {
+                                this.MSP_MODE_RANGES_handler.handle_MSP_MODE_RANGES(
+                                bb);
                             }
                             break;
 
-
-                    }
-                }
-        }
-    }
-
-    public byte [] serialize_SET_ARMED(byte flag) {
 
-        ByteBuffer bb = newByteBuffer(1);
+                    }
+                }
+        }
+    }
 
-        bb.put(flag);
+    private MSP_STATUS_Handler MSP_STATUS_handler;
 
-        byte [] message = new byte[7];
+    public void set_MSP_STATUS_Handler(MSP_STATUS_Handler handler) {
+
+        this.MSP_STATUS_handler = handler;
+    }
+
+    public byte [] serialize_MSP_STATUS_Request() {
+
+
+        byte [] message = new byte[6];
+
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)101;
+        message[5] = (byte)101;
+
+        return message;
+    }
+
+    public byte [] serialize_MSP_STATUS(short cycletime, short i2cErrorCount, short sensorStatus, int boxModeFlags, byte profile) {
+
+        ByteBuffer bb = newByteBuffer(11);
+
+        bb.putShort(cycletime);
+        bb.putShort(i2cErrorCount);
+        bb.putShort(sensorStatus);
+        bb.putInt(boxModeFlags);
+        bb.put(profile);
+
+        byte [] message = new byte[20];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
-        message[3] = 1;
-        message[4] = (byte)216;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)101;
+        message[5] = (byte)0;
+        message[6] = 11;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[6] = CRC8(message, 3, 5);
+        message[19] = CRC_dvb_s2(message, 3, 19);
 
         return message;
     }
@@ -227,9 +281,9 @@ public class Parser {
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
         message[4] = (byte)150;
         message[5] = (byte)150;
@@ -250,120 +304,153 @@ public class Parser {
         bb.putShort(armingFlags);
         bb.put(accCalibrationArmingFlags);
 
-        byte [] message = new byte[22];
+        byte [] message = new byte[25];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 16;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
         message[4] = (byte)150;
+        message[5] = (byte)0;
+        message[6] = 16;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[21] = CRC8(message, 3, 20);
+        message[24] = CRC_dvb_s2(message, 3, 24);
 
         return message;
     }
 
-    private RC_NORMAL_Handler RC_NORMAL_handler;
+    private MSP_SET_MODE_RANGE_Handler MSP_SET_MODE_RANGE_handler;
 
-    public void set_RC_NORMAL_Handler(RC_NORMAL_Handler handler) {
+    public void set_MSP_SET_MODE_RANGE_Handler(MSP_SET_MODE_RANGE_Handler handler) {
 
-        this.RC_NORMAL_handler = handler;
+        this.MSP_SET_MODE_RANGE_handler = handler;
     }
 
-    public byte [] serialize_RC_NORMAL_Request() {
+    public byte [] serialize_MSP_SET_MODE_RANGE_Request() {
 
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
-        message[4] = (byte)121;
-        message[5] = (byte)121;
+        message[4] = (byte)35;
+        message[5] = (byte)35;
 
         return message;
     }
 
-    public byte [] serialize_RC_NORMAL(float c1, float c2, float c3, float c4, float c5, float c6, float c7, float c8) {
+    public byte [] serialize_MSP_SET_MODE_RANGE(byte n, byte box, byte aux, byte start, byte end) {
 
-        ByteBuffer bb = newByteBuffer(32);
+        ByteBuffer bb = newByteBuffer(5);
 
-        bb.putFloat(c1);
-        bb.putFloat(c2);
-        bb.putFloat(c3);
-        bb.putFloat(c4);
-        bb.putFloat(c5);
-        bb.putFloat(c6);
-        bb.putFloat(c7);
-        bb.putFloat(c8);
+        bb.put(n);
+        bb.put(box);
+        bb.put(aux);
+        bb.put(start);
+        bb.put(end);
 
-        byte [] message = new byte[38];
+        byte [] message = new byte[14];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 32;
-        message[4] = (byte)121;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)35;
+        message[5] = (byte)0;
+        message[6] = 5;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[37] = CRC8(message, 3, 36);
+        message[13] = CRC_dvb_s2(message, 3, 13);
 
         return message;
     }
 
-    private MSP_STATUS_Handler MSP_STATUS_handler;
+    public byte [] serialize_MSP_EEPROM_WRITE() {
 
-    public void set_MSP_STATUS_Handler(MSP_STATUS_Handler handler) {
+        ByteBuffer bb = newByteBuffer(0);
 
-        this.MSP_STATUS_handler = handler;
+
+        byte [] message = new byte[9];
+        message[0] = 36;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)250;
+        message[5] = (byte)0;
+        message[6] = 0;
+        message[7] = 0;
+        byte [] data = bb.array();
+        int k;
+        for (k=0; k<data.length; ++k) {
+            message[k+8] = data[k];
+        }
+
+        message[8] = CRC_dvb_s2(message, 3, 8);
+
+        return message;
     }
 
-    public byte [] serialize_MSP_STATUS_Request() {
+    private MSP_RC_Handler MSP_RC_handler;
+
+    public void set_MSP_RC_Handler(MSP_RC_Handler handler) {
+
+        this.MSP_RC_handler = handler;
+    }
+
+    public byte [] serialize_MSP_RC_Request() {
 
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
-        message[4] = (byte)101;
-        message[5] = (byte)101;
+        message[4] = (byte)105;
+        message[5] = (byte)105;
 
         return message;
     }
 
-    public byte [] serialize_MSP_STATUS(short cycletime, short i2cErrorCount, short sensorStatus, int boxModeFlags, byte profile) {
+    public byte [] serialize_MSP_RC(short roll, short pitch, short yaw, short throttle, short aux1, short aux2, short aux3) {
 
-        ByteBuffer bb = newByteBuffer(11);
+        ByteBuffer bb = newByteBuffer(14);
 
-        bb.putShort(cycletime);
-        bb.putShort(i2cErrorCount);
-        bb.putShort(sensorStatus);
-        bb.putInt(boxModeFlags);
-        bb.put(profile);
+        bb.putShort(roll);
+        bb.putShort(pitch);
+        bb.putShort(yaw);
+        bb.putShort(throttle);
+        bb.putShort(aux1);
+        bb.putShort(aux2);
+        bb.putShort(aux3);
 
-        byte [] message = new byte[17];
+        byte [] message = new byte[23];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 11;
-        message[4] = (byte)101;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)105;
+        message[5] = (byte)0;
+        message[6] = 14;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[16] = CRC8(message, 3, 15);
+        message[22] = CRC_dvb_s2(message, 3, 22);
 
         return message;
     }
@@ -380,9 +467,9 @@ public class Parser {
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
         message[4] = (byte)73;
         message[5] = (byte)73;
@@ -396,19 +483,22 @@ public class Parser {
 
         bb.putShort(cycletime);
 
-        byte [] message = new byte[8];
+        byte [] message = new byte[11];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 2;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
         message[4] = (byte)73;
+        message[5] = (byte)0;
+        message[6] = 2;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[7] = CRC8(message, 3, 6);
+        message[10] = CRC_dvb_s2(message, 3, 10);
 
         return message;
     }
@@ -425,9 +515,9 @@ public class Parser {
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
         message[4] = (byte)58;
         message[5] = (byte)58;
@@ -441,19 +531,22 @@ public class Parser {
 
         bb.putInt(altitude);
 
-        byte [] message = new byte[10];
+        byte [] message = new byte[13];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 4;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
         message[4] = (byte)58;
+        message[5] = (byte)0;
+        message[6] = 4;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[9] = CRC8(message, 3, 8);
+        message[12] = CRC_dvb_s2(message, 3, 12);
 
         return message;
     }
@@ -470,9 +563,9 @@ public class Parser {
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
         message[4] = (byte)106;
         message[5] = (byte)106;
@@ -493,94 +586,47 @@ public class Parser {
         bb.putShort(groundCourse);
         bb.putShort(hdop);
 
-        byte [] message = new byte[24];
+        byte [] message = new byte[27];
         message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 18;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
         message[4] = (byte)106;
+        message[5] = (byte)0;
+        message[6] = 18;
+        message[7] = 0;
         byte [] data = bb.array();
         int k;
         for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
+            message[k+8] = data[k];
         }
 
-        message[23] = CRC8(message, 3, 22);
+        message[26] = CRC_dvb_s2(message, 3, 26);
 
         return message;
     }
 
-    private ATTITUDE_RADIANS_Handler ATTITUDE_RADIANS_handler;
+    private MSP_MODE_RANGES_Handler MSP_MODE_RANGES_handler;
 
-    public void set_ATTITUDE_RADIANS_Handler(ATTITUDE_RADIANS_Handler handler) {
+    public void set_MSP_MODE_RANGES_Handler(MSP_MODE_RANGES_Handler handler) {
 
-        this.ATTITUDE_RADIANS_handler = handler;
+        this.MSP_MODE_RANGES_handler = handler;
     }
 
-    public byte [] serialize_ATTITUDE_RADIANS_Request() {
+    public byte [] serialize_MSP_MODE_RANGES_Request() {
 
 
         byte [] message = new byte[6];
 
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
         message[3] = 0;
-        message[4] = (byte)122;
-        message[5] = (byte)122;
+        message[4] = (byte)34;
+        message[5] = (byte)34;
 
         return message;
     }
 
-    public byte [] serialize_ATTITUDE_RADIANS(float roll, float pitch, float yaw) {
-
-        ByteBuffer bb = newByteBuffer(12);
-
-        bb.putFloat(roll);
-        bb.putFloat(pitch);
-        bb.putFloat(yaw);
-
-        byte [] message = new byte[18];
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 62;
-        message[3] = 12;
-        message[4] = (byte)122;
-        byte [] data = bb.array();
-        int k;
-        for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
-        }
-
-        message[17] = CRC8(message, 3, 16);
-
-        return message;
-    }
-
-    public byte [] serialize_SET_MOTOR_NORMAL(float m1, float m2, float m3, float m4) {
-
-        ByteBuffer bb = newByteBuffer(16);
-
-        bb.putFloat(m1);
-        bb.putFloat(m2);
-        bb.putFloat(m3);
-        bb.putFloat(m4);
-
-        byte [] message = new byte[22];
-        message[0] = 36;
-        message[1] = 77;
-        message[2] = 60;
-        message[3] = 16;
-        message[4] = (byte)215;
-        byte [] data = bb.array();
-        int k;
-        for (k=0; k<data.length; ++k) {
-            message[k+5] = data[k];
-        }
-
-        message[21] = CRC8(message, 3, 20);
-
-        return message;
-    }
-
+    // not generated: public byte [] serialize_MSP_MODE_RANGES
 }

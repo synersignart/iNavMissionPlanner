@@ -19,9 +19,7 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     public static MissionPlanner m_app = null;
-    private int m_refreshRateUI = 100;
 
-    Handler handlerGuiUpdate = new Handler();
     Handler handler = new Handler()
     {
         public void handleMessage(Message msg)
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         m_app = new MissionPlanner(getApplicationContext(), handler);
         m_app.setMAC("20:15:07:20:66:45");
-        m_handlerUpdateUI.postDelayed(m_runnableUpdateUI, m_refreshRateUI);
+        m_handlerUpdateUI.postDelayed(m_runnableUpdateUI, Const.refreshRateUI);
     }
 
     @Override
@@ -73,13 +71,17 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         switch (id) {
-            case R.id.action_settings:
-                return true;
             case R.id.action_scan_bluetooth:
                 showActivityScanBluetoothDevices();
                 return true;
+            case R.id.action_settings:
+                showActivitySettings();
+                return true;
             case R.id.action_connect_bluetooth:
                 m_app.connect();
+                return true;
+            case R.id.action_disconnect_bluetooth:
+                m_app.disconnect();
                 return true;
         }
 
@@ -90,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
     {
         Intent intent = new Intent(this, ScanBluetoothActivity.class);
         startActivityForResult(intent,Const.ACTIVITY_SCAN_BLUETOOTH_DEVICES);
+    }
+
+    void showActivitySettings()
+    {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent,Const.ACTIVITY_SETTINGS);
     }
 
     @Override
@@ -127,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
             ((CheckBox)findViewById(R.id.cbAccPresent)).setChecked(getData().accPresent);
 
             ((CheckBox)findViewById(R.id.cbConnected)).setChecked(getComm().isConnected());
-            ((TextView)findViewById(R.id.tvTxRx)).setText(String.format("t: %d / r: %d" , getComm().tx(), getComm().rx()));
+            ((TextView)findViewById(R.id.tvTx)).setText(""+ getComm().tx());
+            ((TextView)findViewById(R.id.tvRx)).setText(""+ getComm().rx());
 
             ((TextView)findViewById(R.id.tvGpsSats)).setText(""+getData().gpsNumSats);
             ((CheckBox)findViewById(R.id.cbGps2dFix)).setChecked(getData().gpsFix2d);
@@ -136,7 +145,10 @@ public class MainActivity extends AppCompatActivity {
 
             ((TextView)findViewById(R.id.tvSonarAlt)).setText(""+getData().sonarAltitude);
 
-            m_handlerUpdateUI.postDelayed(this, m_refreshRateUI);
+            ((TextView)findViewById(R.id.tvRC1)).setText(String.format("Roll=%d, Pitch=%d, Yaw=%d, Throttle=%d" , getData().rcRoll, getData().rcPitch, getData().rcYaw, getData().rcThrottle));
+            ((TextView)findViewById(R.id.tvRC2)).setText(String.format("Aux1=%d, Aux2=%d, Aux3=%d, Aux4=%d" , getData().rcAux1, getData().rcAux2, getData().rcAux3, getData().rcAux4));
+
+            m_handlerUpdateUI.postDelayed(this, Const.refreshRateUI);
         }
     };
 

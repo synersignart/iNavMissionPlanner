@@ -40,5 +40,37 @@
     {"groundCourse": "short"},
     {"hdop": "short"}
   ]
+,
+  "MSP_RC": [{"ID": 105},
+    {"comment": ""},
+    {"roll": "short"},
+    {"pitch": "short"},
+    {"yaw": "short"},
+    {"throttle": "short"},
+    {"aux1": "short"},
+    {"aux2": "short"},
+    {"aux3": "short"}
+  ]
+,
+  "MSP_SET_MODE_RANGE": [{"ID": 35},
+    {"comment": ""},
+    {"n": "byte"},
+    {"box": "byte"},
+    {"aux": "byte"},
+    {"start": "byte"},
+    {"end": "byte"}
+  ]
+,
+  "MSP_EEPROM_WRITE": [{"ID": 250},
+    {"comment": ""}
+  ]
+  ,
+  "MSP_MODE_RANGES": [{"ID": 34},
+    {"comment": ""},
+    {"data": "ByteBuffer"}
+  ]
+
+
+
 
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="BoxModeAux">
+        <item>Nothing</item>
+        <item>Clear</item>
+        <item>Aux 1</item>
+        <item>Aux 2</item>
+    </string-array>
+</resources>

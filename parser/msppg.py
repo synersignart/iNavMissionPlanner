@@ -54,7 +54,7 @@ class CodeEmitter(object):
 
         self.indent = '    '
 
-        self.type2size = {'byte': 1, 'short' : 2, 'float' : 4, 'int' : 4}
+        self.type2size = {'byte': 1, 'short' : 2, 'float' : 4, 'int' : 4, 'ByteBuffer' : 0 }
 
     def _copyfile(self, src, dst):
 
@@ -89,7 +89,10 @@ class CodeEmitter(object):
 
     def _getsrc(self, filename):
 
-        return resource_string('msppg_resources', filename).decode('utf-8')
+        #return resource_string('msppg_resources', filename).decode('utf-8')
+        with open( "msppg_resources/" + filename, 'r') as myfile:
+            data = myfile.read()
+        return data
  
     def _getargnames(self, message):
 
@@ -535,8 +538,8 @@ class Java_Emitter(CodeEmitter):
         mkdir_if_missing(OUTDIR + '/java/edu/wlu/cs')
         mkdir_if_missing(OUTDIR + '/java/edu/wlu/cs/msppg')
 
-        self.type2decl  = {'byte': 'byte', 'short' : 'short', 'float' : 'float', 'int' : 'int'}
-        self.type2bb   = {'byte': '', 'short' : 'Short', 'float' : 'Float', 'int' : 'Int'}
+        self.type2decl  = {'byte': 'byte', 'short' : 'short', 'float' : 'float', 'int' : 'int', 'ByteBuffer' : 'ByteBuffer'}
+        self.type2bb   = {'byte': '', 'short' : 'Short', 'float' : 'Float', 'int' : 'Int', 'ByteBuffer' : 'ByteBuffer'}
 
         self.output = _openw(OUTDIR + '/java/edu/wlu/cs/msppg/Parser.java')
 
@@ -564,10 +567,15 @@ class Java_Emitter(CodeEmitter):
                 offset = 0
                 for k in range(nargs):
                     argtype = argtypes[k]
-                    self._write(8*self.indent + 'bb.get%s(%d)' % (self.type2bb[argtype], offset))
-                    offset += self.type2size[argtype]
-                    if k < nargs-1:
-                        self._write(',\n')
+                    if (argtype == 'ByteBuffer'):
+                        self._write(8*self.indent + 'bb')
+                        break;
+                    else:
+                        self._write(8*self.indent + 'bb.get%s(%d)' % (self.type2bb[argtype], offset))
+                        offset += self.type2size[argtype]
+                        if k < nargs-1:
+                            self._write(',\n')
+						
                 self._write(');\n')
 
                 self._write(7*self.indent + '}\n')
@@ -598,39 +606,47 @@ class Java_Emitter(CodeEmitter):
                 paysize = self._paysize(argtypes)
                 msgsize = self._msgsize(argtypes)
                 self._write('\n' + 2*self.indent + 'byte [] message = new byte[6];\n\n')
-                self._write(2*self.indent + 'message[0] = 36;\n')
-                self._write(2*self.indent + 'message[1] = 77;\n')
-                self._write(2*self.indent + 'message[2] = 60;\n')
+                self._write(2*self.indent + 'message[0] = 36; // 0x24\n')
+                self._write(2*self.indent + 'message[1] = 77; // 0x4D\n')
+                self._write(2*self.indent + 'message[2] = 60; // 0x3C => Request\n')
                 self._write(2*self.indent + 'message[3] = 0;\n')
                 self._write(2*self.indent + 'message[4] = (byte)%d;\n' % msgid)
                 self._write(2*self.indent + 'message[5] = (byte)%d;\n\n' % msgid)
                 self._write(2*self.indent + 'return message;\n')
                 self._write(self.indent + '}\n\n')
 
-            # Write serializer method for messages from FC
-            self._write(self.indent + 'public byte [] serialize_%s' % msgtype)
-            self._write_params(self.output, argtypes, argnames)
-            self._write(' {\n\n')
-            paysize = self._paysize(argtypes)
-            msgsize = self._msgsize(argtypes)
-            self._write(2*self.indent + 'ByteBuffer bb = newByteBuffer(%d);\n\n' % paysize)
-            for (argname,argtype) in zip(argnames,argtypes):
-                self._write(2*self.indent + 'bb.put%s(%s);\n' % (self.type2bb[argtype], argname))
-            self._write('\n' + 2*self.indent + 'byte [] message = new byte[%d];\n' % (msgsize+6))
-            self._write(2*self.indent + 'message[0] = 36;\n')
-            self._write(2*self.indent + 'message[1] = 77;\n')
-            self._write(2*self.indent + 'message[2] = %d;\n' % (62 if msgid < 200 else 60))
-            self._write(2*self.indent + 'message[3] = %d;\n' % msgsize)
-            self._write(2*self.indent + 'message[4] = (byte)%d;\n' %msgdict[msgtype][0]) 
-            self._write(2*self.indent + 'byte [] data = bb.array();\n')
-            self._write(2*self.indent + 'int k;\n')
-            self._write(2*self.indent + 'for (k=0; k<data.length; ++k) {\n')
-            self._write(3*self.indent + 'message[k+5] = data[k];\n')
-            self._write(2*self.indent + '}\n\n')
-            self._write(2*self.indent + 'message[%d] = CRC8(message, 3, %d);\n\n' % 
-                    (msgsize+5, msgsize+4))
-            self._write(2*self.indent + 'return message;\n')
-            self._write(self.indent + '}\n\n')
+            if (len(argtypes)>0 and (argtypes[0] == 'ByteBuffer')):
+                self._write(self.indent + '// not generated: public byte [] serialize_%s\n' % msgtype)
+            else:
+                # Write serializer method for messages from FC
+                self._write(self.indent + 'public byte [] serialize_%s' % msgtype)
+                self._write_params(self.output, argtypes, argnames)
+                self._write(' {\n\n')
+                paysize = self._paysize(argtypes)
+                msgsize = self._msgsize(argtypes)
+                self._write(2*self.indent + 'ByteBuffer bb = newByteBuffer(%d);\n\n' % paysize)
+                for (argname,argtype) in zip(argnames,argtypes):
+                    self._write(2*self.indent + 'bb.put%s(%s);\n' % (self.type2bb[argtype], argname))
+                self._write('\n' + 2*self.indent + 'byte [] message = new byte[%d];\n' % (msgsize+9))
+                self._write(2*self.indent + 'message[0] = 36;\n')
+                self._write(2*self.indent + 'message[1] = 88;\n')
+                self._write(2*self.indent + 'message[2] = 60; // 0x3C => Request\n')
+                self._write(2*self.indent + 'message[3] = 0;\n')
+                msg = int(msgdict[msgtype][0]);
+                self._write(2*self.indent + 'message[4] = (byte)%d;\n' %(msg&0xff))
+                self._write(2*self.indent + 'message[5] = (byte)%d;\n' %((msg>>8)&0xff))
+                self._write(2*self.indent + 'message[6] = %d;\n' % (msgsize&0xFF))
+                self._write(2*self.indent + 'message[7] = %d;\n' % ((msgsize>>8)&0xff))
+
+                self._write(2*self.indent + 'byte [] data = bb.array();\n')
+                self._write(2*self.indent + 'int k;\n')
+                self._write(2*self.indent + 'for (k=0; k<data.length; ++k) {\n')
+                self._write(3*self.indent + 'message[k+8] = data[k];\n')
+                self._write(2*self.indent + '}\n\n')
+                self._write(2*self.indent + 'message[%d] = CRC_dvb_s2(message, 3, %d);\n\n' %
+                        (msgsize+8, msgsize+8))
+                self._write(2*self.indent + 'return message;\n')
+                self._write(self.indent + '}\n\n')
 
         self._write('}')
 
@@ -650,6 +666,7 @@ class Java_Emitter(CodeEmitter):
                 self.output = _openw(OUTDIR + '/java/edu/wlu/cs/msppg/%s_Handler.java' % msgtype)
                 self.output.write(self.warning('//'))
                 self.output.write('package edu.wlu.cs.msppg;\n\n')
+                self.output.write('import java.nio.ByteBuffer;')
                 self.output.write('public interface %s_Handler {\n\n' % msgtype)
                 self.output.write(self.indent + 'public void handle_%s' % msgtype)
                 self._write_params(self.output, argtypes, argnames)

@@ -58,7 +58,7 @@ public class BluetoothComm implements IComm {
 
 
     public void enable() {
-        showToast(m_context.getString(R.string.bt_starting));
+        //showToast(m_context.getString(R.string.bt_starting));
 
         m_btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (m_btAdapter == null) {
@@ -73,7 +73,7 @@ public class BluetoothComm implements IComm {
         }
     }
 
-    public void connect(String address, int speed) {
+    public boolean connect(String address, int speed) {
         showToast(m_context.getString(R.string.connecting));
 
         if (m_btAdapter.isEnabled()) {
@@ -95,11 +95,11 @@ public class BluetoothComm implements IComm {
             try {
                 m_outStream = m_btSocket.getOutputStream();
                 m_inStream = m_btSocket.getInputStream();
-
             } catch (IOException e) {
                 showToast("Stream creation failed");
             }
         }
+        return m_connected;
     }
 
     public boolean dataAvailable() {
@@ -127,10 +127,11 @@ public class BluetoothComm implements IComm {
 
     public void write(byte[] arr) {
         try {
-            if (m_connected) {
-                m_outStream.write(arr);
-                m_tx += arr.length;
-            }
+                if (m_connected) {
+                    m_outStream.write(arr);
+                    m_outStream.flush();
+                    m_tx += arr.length;
+                }
         } catch (IOException e) {
             close();
             showToast("Write error");
@@ -171,12 +172,11 @@ public class BluetoothComm implements IComm {
             if (m_btSocket != null) {
                 m_btSocket.close();
             }
-            m_connected = false;
-
             Toast.makeText(m_context, m_context.getString(R.string.disconnected), Toast.LENGTH_LONG).show();
 
         } catch (Exception e2) {
             showToast("Unable to close socket");
         }
+        m_connected = false;
     }
 }

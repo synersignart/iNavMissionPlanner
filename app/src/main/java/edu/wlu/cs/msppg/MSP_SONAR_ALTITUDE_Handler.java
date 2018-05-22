@@ -2,7 +2,7 @@
 
 package edu.wlu.cs.msppg;
 
-public interface MSP_SONAR_ALTITUDE_Handler {
+import java.nio.ByteBuffer;public interface MSP_SONAR_ALTITUDE_Handler {
 
     public void handle_MSP_SONAR_ALTITUDE(int altitude);
 }

@@ -40,6 +40,23 @@ public class Parser {
         return (byte)crc;
     }
 
+    private static byte CRC_dvb_s2(byte [] data, int beg, int end) {
+        int crc = 0;
+        for (int k=beg; k<end; ++k) {
+
+            byte a = data[k];
+            crc ^= a;
+            for (int ii = 0; ii < 8; ++ii) {
+                if ((crc & 0x80) > 0) {
+                    crc = (crc << 1) ^ 0xD5;
+                } else {
+                    crc = crc << 1;
+                }
+            }
+        }
+        return (byte)crc;
+    }
+
     public void parse(byte b) {
 
         switch (this.state) {
