@@ -22,4 +22,5 @@
     <string name="Uploading">uploading</string>
     <string name="PleaseWait">please wait</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_map">MapActivity</string>
 </resources>

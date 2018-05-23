@@ -24,9 +24,9 @@ public class MainActivity extends AppCompatActivity {
     {
         public void handleMessage(Message msg)
         {
-        if(msg.what==0) {
-            showToast((String)msg.obj);
-        }
+            if(msg.what==0) {
+                showToast((String)msg.obj);
+            }
         }
     };
 
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-       FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -77,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 showActivitySettings();
                 return true;
+            case R.id.action_map:
+                showActivityMap();
+                return true;
             case R.id.action_connect_bluetooth:
                 m_app.connect();
                 return true;
@@ -98,6 +101,12 @@ public class MainActivity extends AppCompatActivity {
     {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivityForResult(intent,Const.ACTIVITY_SETTINGS);
+    }
+
+    void showActivityMap()
+    {
+        Intent intent = new Intent(this, MapActivity.class);
+        startActivityForResult(intent,Const.ACTIVITY_MAP);
     }
 
     @Override
