@@ -3,21 +3,20 @@ package de.meek.inavmissionplanner;
 import android.content.Context;
 import android.os.Handler;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
-public class MissionPlanner {
+public class App {
 
     private String m_macAddress = null;
     public int m_serialPortBaudRate = 115200;
     public Handler m_handler = null;
-    public static MissionPlanner m_app = null;
+    public static App m_app = null;
     private IComm m_comm = null;
     private int m_refreshRate = 500;
     private int m_sendRate = 20;
     private MspHandler m_mspHandler = new MspHandler();
 
-    public MissionPlanner(Context context, Handler handler)
+    public App(Context context, Handler handler)
     {
         this.m_app = this;
         this.m_handler = handler;

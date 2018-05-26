@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -18,7 +17,7 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static MissionPlanner m_app = null;
+    public static App m_app = null;
 
     Handler handler = new Handler()
     {
@@ -51,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        m_app = new MissionPlanner(getApplicationContext(), handler);
+        m_app = new App(getApplicationContext(), handler);
         m_app.setMAC("20:15:07:20:66:45");
         m_handlerUpdateUI.postDelayed(m_runnableUpdateUI, Const.refreshRateUI);
     }

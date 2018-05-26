@@ -135,7 +135,7 @@ public class SettingsActivity extends AppCompatActivity {
         return MainActivity.m_app.getMsp();
     }
 
-    public MissionPlanner getApp() {
+    public App getApp() {
         return MainActivity.m_app;
     }
 

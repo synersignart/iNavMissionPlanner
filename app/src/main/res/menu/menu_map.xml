@@ -7,4 +7,10 @@
     <item
         android:id="@+id/action_send_wp"
         android:title="Send" />
+    <item
+        android:id="@+id/action_load_mission"
+        android:title="Load mission" />
+    <item
+        android:id="@+id/action_save_mission"
+        android:title="Save mission" />
 </menu>
