@@ -13,4 +13,7 @@
     <item
         android:id="@+id/action_save_mission"
         android:title="Save mission" />
+    <item
+        android:id="@+id/action_clear_mission"
+        android:title="Clear mission" />
 </menu>

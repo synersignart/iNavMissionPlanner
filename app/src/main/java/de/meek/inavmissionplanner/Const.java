@@ -9,6 +9,9 @@ public class Const {
     public static final int ACTIVITY_MAP = 35;
     public static final String EXTRA_DEVICE_ADDRESS = "device_address";
 
+    public static final int REQUEST_CODE_LOAD_MISSION = 123;
+    public static final int REQUEST_CODE_SAVE_MISSION = 124;
+
     public static final int refreshRateUI = 100;
 
 

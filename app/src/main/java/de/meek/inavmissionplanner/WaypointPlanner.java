@@ -139,13 +139,16 @@ public class WaypointPlanner {
 
     public LatLngBounds getWaypointBounds(Mavlink.MissionPlan plan)
     {
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        for (Mavlink.MissionItem wp : plan.mission.items) {
-            if (wp.hasLatLng()) {
-                builder.include(wp.getLatLng());
+        LatLngBounds bounds = null;
+        if (plan != null) {
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (Mavlink.MissionItem wp : plan.mission.items) {
+                if (wp.hasLatLng()) {
+                    builder.include(wp.getLatLng());
+                }
             }
+            bounds = builder.build();
         }
-        LatLngBounds bounds = builder.build();
         return bounds;
     }
 }

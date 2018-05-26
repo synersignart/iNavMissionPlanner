@@ -1,8 +1,11 @@
 package de.meek.inavmissionplanner;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -12,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
@@ -24,6 +28,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.samsung.sprc.fileselector.FileOperation;
+import com.samsung.sprc.fileselector.FileSelector;
+import com.samsung.sprc.fileselector.OnHandleFileListener;
 
 import java.io.InputStream;
 
@@ -35,6 +42,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     Mavlink.MissionItem selectedWaypoint_ = null;
     Mavlink mavlin_ = new Mavlink();
     WaypointPlanner waypointPlanner_ = new WaypointPlanner();
+    Mavlink.MissionPlan missonPlan_ = null;
+    String chosenDir_ = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,14 +95,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         map_.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
             @Override
             public void onInfoWindowClose(Marker marker) {
-                // Do whatever you want to do here...
                 selectedWaypoint_ = null;
             }
         });
 
+        WaypointMarker wpMarker = new WaypointMarker(getLayoutInflater());
+        map_.setInfoWindowAdapter(wpMarker);
+
         waypointPlanner_.setMap(map_);
-        mavlin_.createEmptyMissionPlan();
-        waypointPlanner_.setMissionPlan(mavlin_.getMissionPlan());
+        missonPlan_ = mavlin_.createEmptyMissionPlan();
+        waypointPlanner_.setMissionPlan(missonPlan_);
     }
 
     private void addCopterMarker() {
@@ -169,16 +180,95 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.action_load_mission:
                 loadMission();
                 return true;
+            case R.id.action_save_mission:
+                saveMission();
+                return true;
+            case R.id.action_clear_mission:
+                clearMission();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    OnHandleFileListener mLoadFileListener = new OnHandleFileListener() {
+        @Override
+        public void handleFile(final String filePath) {
+//            Toast.makeText(MapActivity.this, "Load: " + filePath, Toast.LENGTH_SHORT).show();
+            Uri uri = Uri.parse("file://"+filePath);
+            String jsonStr = null;
+            try {
+                InputStream inputStream = getContentResolver().openInputStream(uri);
+                missonPlan_ = mavlin_.loadMission(inputStream);
+                waypointPlanner_.setMissionPlan(missonPlan_);
+                LatLngBounds llb = waypointPlanner_.getWaypointBounds(missonPlan_);
+                if (llb != null) {
+                    setMapToRegion(llb);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    };
+
+    public boolean checkPermissionForReadExtertalStorage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int result = this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            return result == PackageManager.PERMISSION_GRANTED;
+        }
+        return false;
+    }
+
+    public void requestPermissionForReadExtertalStorage() throws Exception {
+        try {
+            ActivityCompat.requestPermissions((Activity) this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
     private void loadMission() {
-        Intent intent = new Intent()
-                .setType("*/*")
-                .setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select mission"), 123);
+        if (!checkPermissionForReadExtertalStorage()) {
+            try {
+                requestPermissionForReadExtertalStorage();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+//        Intent intent = new Intent()
+//                .setType("*/*")
+//                .setAction(Intent.ACTION_GET_CONTENT);
+//        startActivityForResult(Intent.createChooser(intent, "Load mission"), Const.REQUEST_CODE_LOAD_MISSION);*/
+
+
+
+        final String[] mFileFilter = { "*.*", ".jpeg", ".txt", ".png" };
+        new FileSelector(MapActivity.this, FileOperation.LOAD, mLoadFileListener, mFileFilter).show();
+
+
+    }
+
+    OnHandleFileListener mSaveFileListener = new OnHandleFileListener() {
+        @Override
+        public void handleFile(final String filePath) {
+            Toast.makeText(MapActivity.this, "Save: " + filePath, Toast.LENGTH_SHORT).show();
+        }
+    };
+
+
+    private void saveMission() {
+        final String[] mFileFilter = { "*.*", ".jpeg", ".txt", ".png" };
+        new FileSelector(MapActivity.this, FileOperation.SAVE, mSaveFileListener, mFileFilter).show();
+    }
+
+    private void clearMission() {
+        selectedWaypoint_ = null;
+        missonPlan_ = mavlin_.createEmptyMissionPlan();
+        waypointPlanner_.setMissionPlan(missonPlan_);
+        updateWaypoints();
     }
 
     void setMapToRegion(LatLngBounds llb) {
@@ -192,14 +282,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==123 && resultCode==RESULT_OK) {
+        if ((requestCode == Const.REQUEST_CODE_LOAD_MISSION) && (resultCode == RESULT_OK)) {
             Uri uri = data.getData(); //The uri with the location of the file
             String jsonStr = null;
             try {
                 InputStream inputStream = getContentResolver().openInputStream(uri);
-                if (mavlin_.loadMission(inputStream)) {
-                    waypointPlanner_.setMissionPlan(mavlin_.getMissionPlan());
-                    LatLngBounds llb = waypointPlanner_.getWaypointBounds(mavlin_.getMissionPlan());
+                missonPlan_ = mavlin_.loadMission(inputStream);
+                waypointPlanner_.setMissionPlan(missonPlan_);
+                LatLngBounds llb = waypointPlanner_.getWaypointBounds(missonPlan_);
+                if (llb != null) {
                     setMapToRegion(llb);
                 }
             } catch (Exception e) {
@@ -215,7 +306,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         } else {
             waypointPlanner_.addWaypoint(ll, altitude);
         }
-
         updateWaypoints();
     }
 
@@ -236,10 +326,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     public void onBtnAddCenterWP(View v) {
         LatLng center = map_.getCameraPosition().target;
-        int alt = 2; //Integer.valueOf(editAlt.getText().toString());
+        //int alt = 2; //Integer.valueOf(editAlt.getText().toString());
         //waypointList.add(new Waypoint(inavApp.theApp.waypointList.size(), center, alt, 5, 5, 5));
         addWaypoint(center, 2);
     }
 
-
+    public void onBtnAddDroneWP(View v) {
+        addWaypoint(copterPos_, 2);
+    }
 }
