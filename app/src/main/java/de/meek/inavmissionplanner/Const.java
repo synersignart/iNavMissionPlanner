@@ -7,6 +7,7 @@ public class Const {
     public static final int ACTIVITY_SCAN_BLUETOOTH_DEVICES = 33;
     public static final int ACTIVITY_SETTINGS = 34;
     public static final int ACTIVITY_MAP = 35;
+    public static final int ACTIVITY_MAIN = 36;
     public static final String EXTRA_DEVICE_ADDRESS = "device_address";
 
     public static final int REQUEST_CODE_LOAD_MISSION = 123;

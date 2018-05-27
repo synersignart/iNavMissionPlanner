@@ -75,8 +75,8 @@ public class SettingsActivity extends AppCompatActivity {
     Runnable m_runnableUpdateUI = new Runnable() {
         @Override
         public void run() {
-        ((TextView)findViewById(R.id.tvAux1Val)).setText(String.format("%d" , getData().rcAux1));
-        ((TextView)findViewById(R.id.tvAux2Val)).setText(String.format("%d" , getData().rcAux2));
+        ((TextView)findViewById(R.id.tvAux1Val)).setText(String.format("%d" , App.getInstance().getMsp().rcAux1));
+        ((TextView)findViewById(R.id.tvAux2Val)).setText(String.format("%d" , App.getInstance().getMsp().rcAux2));
         m_handlerCyclicUpdateUI.postDelayed(this, Const.refreshRateUI);
         }
     };
@@ -89,10 +89,10 @@ public class SettingsActivity extends AppCompatActivity {
             case 1: // clear
                 break;
             case 2: // aux 1
-                start = getMsp().rcAux1;
+                start = App.getInstance().getMsp().rcAux1;
                 break;
             case 3: // aux 2
-                start = getMsp().rcAux2;
+                start = App.getInstance().getMsp().rcAux2;
                 break;
             case 0: // nothing
             default:
@@ -107,46 +107,34 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         int permanentId = Const.boxes[index].permanentId;
-        synchronized (getApp().getMsp().boxModeList) {
+        synchronized (App.getInstance().getMsp().boxModeList) {
             int i = 0;
             int free = -1;
-            for (BoxMode bm : getApp().getMsp().boxModeList) {
+            for (BoxMode bm : App.getInstance().getMsp().boxModeList) {
                 if ((free == -1) && (bm.m_start ==  bm.m_end)) {
                     free = i;
                 }
                 if (bm.m_permanentId == permanentId) {
-                    getApp().getMsp().boxModeList.set(i, new BoxMode(i, permanentId, aux, start, end));
+                    App.getInstance().getMsp().boxModeList.set(i, new BoxMode(i, permanentId, aux, start, end));
                     return;
                 }
                 i++;
             }
 
             if (free != -1) {
-                getApp().getMsp().boxModeList.set(free, new BoxMode(free, permanentId, aux, start, end));
+                App.getInstance().getMsp().boxModeList.set(free, new BoxMode(free, permanentId, aux, start, end));
             }
         }
-    }
-
-    private MspHandler getData() {
-        return MainActivity.m_app.getMsp();
-    }
-
-    public MspHandler getMsp() {
-        return MainActivity.m_app.getMsp();
-    }
-
-    public App getApp() {
-        return MainActivity.m_app;
     }
 
     public void onBtnSend(View v)
     {
         Toast.makeText(this, "Sending to FC", Toast.LENGTH_SHORT).show();
-        synchronized (getApp().getMsp().boxModeList) {
+        synchronized (App.getInstance().getMsp().boxModeList) {
             int i = 0;
-            for (BoxMode bm : getApp().getMsp().boxModeList) {
-                byte[] b = getMsp().serialize_MSP_SET_MODE_RANGE((byte)i, (byte)bm.m_permanentId, (byte)bm.m_aux, (byte)bm.m_start, (byte)bm.m_end);
-                getApp().request(b);
+            for (BoxMode bm : App.getInstance().getMsp().boxModeList) {
+                byte[] b = App.getInstance().getMsp().serialize_MSP_SET_MODE_RANGE((byte)i, (byte)bm.m_permanentId, (byte)bm.m_aux, (byte)bm.m_start, (byte)bm.m_end);
+                App.getInstance().request(b);
                 i++;
             }
         }
@@ -155,9 +143,9 @@ public class SettingsActivity extends AppCompatActivity {
     public void onBtnReceive(View v)
     {
         Toast.makeText(this, "Receiving from FC", Toast.LENGTH_SHORT).show();
-        getApp().getMsp().registerModeRangeCB(handlerUpdateList);
-        byte[] b = getMsp().serialize_MSP_MODE_RANGES_Request();
-        getApp().request(b);
+        App.getInstance().getMsp().registerModeRangeCB(handlerUpdateList);
+        byte[] b = App.getInstance().getMsp().serialize_MSP_MODE_RANGES_Request();
+        App.getInstance().request(b);
     }
 
     public BoxMode getBox(ArrayList<BoxMode> list, int permanentId) {
@@ -173,13 +161,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     public void refreshList() {
         ArrayList<BoxMode> listData = new ArrayList<>();
-        synchronized (getApp().getMsp().boxModeList) {
+        synchronized (App.getInstance().getMsp().boxModeList) {
             int i=0;
             for(Const.Box b : Const.boxes) {
                 int start = 0;
                 int end = 0;
                 int aux = -1;
-                BoxMode bm = getBox(getApp().getMsp().boxModeList, b.permanentId);
+                BoxMode bm = getBox(App.getInstance().getMsp().boxModeList, b.permanentId);
                 if (bm != null) {
                     start = bm.m_start * 25 + 900;
                     end = bm.m_end * 25 + 900;
@@ -196,8 +184,8 @@ public class SettingsActivity extends AppCompatActivity {
     public void onBtnSave(View v)
     {
         Toast.makeText(this, "Saving to EEPROM", Toast.LENGTH_SHORT).show();
-        byte[] b = getMsp().serialize_MSP_EEPROM_WRITE();
-        getApp().request(b);
+        byte[] b = App.getInstance().getMsp().serialize_MSP_EEPROM_WRITE();
+        App.getInstance().request(b);
     }
 
     Handler handlerUpdateList = new Handler() {

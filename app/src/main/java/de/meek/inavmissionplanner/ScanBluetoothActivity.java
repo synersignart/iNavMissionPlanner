@@ -20,9 +20,9 @@ import java.util.Set;
 
 public class ScanBluetoothActivity extends AppCompatActivity {
 
-    private BluetoothAdapter m_BtAdapter;
-    private ArrayAdapter<String> m_pairedDevicesArrayAdapter;
-    private ArrayAdapter<String> m_newDevicesArrayAdapter;
+    private BluetoothAdapter btAdapter_;
+    private ArrayAdapter<String> pairedDevicesArrayAdapter_;
+    private ArrayAdapter<String> newDevicesArrayAdapter_;
 
 
     @Override
@@ -38,15 +38,15 @@ public class ScanBluetoothActivity extends AppCompatActivity {
             }
         });
 
-        m_pairedDevicesArrayAdapter = new ArrayAdapter<String>(this, R.layout.device_name);
-        m_newDevicesArrayAdapter = new ArrayAdapter<String>(this, R.layout.device_name);
+        pairedDevicesArrayAdapter_ = new ArrayAdapter<String>(this, R.layout.device_name);
+        newDevicesArrayAdapter_ = new ArrayAdapter<String>(this, R.layout.device_name);
 
         ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
-        pairedListView.setAdapter(m_pairedDevicesArrayAdapter);
+        pairedListView.setAdapter(pairedDevicesArrayAdapter_);
         pairedListView.setOnItemClickListener(m_deviceClickListener);
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
-        newDevicesListView.setAdapter(m_newDevicesArrayAdapter);
+        newDevicesListView.setAdapter(newDevicesArrayAdapter_);
         newDevicesListView.setOnItemClickListener(m_deviceClickListener);
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -54,18 +54,18 @@ public class ScanBluetoothActivity extends AppCompatActivity {
         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         this.registerReceiver(m_receiver, filter);
 
-        m_BtAdapter = BluetoothAdapter.getDefaultAdapter();
+        btAdapter_ = BluetoothAdapter.getDefaultAdapter();
 
-        Set<BluetoothDevice> pairedDevices = m_BtAdapter.getBondedDevices();
+        Set<BluetoothDevice> pairedDevices = btAdapter_.getBondedDevices();
 
         if (pairedDevices.size() > 0) {
             findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices) {
-                m_pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                pairedDevicesArrayAdapter_.add(device.getName() + "\n" + device.getAddress());
             }
         } else {
             String noDevices = getResources().getText(R.string.none_paired).toString();
-            m_pairedDevicesArrayAdapter.add(noDevices);
+            pairedDevicesArrayAdapter_.add(noDevices);
         }
     }
 
@@ -73,15 +73,15 @@ public class ScanBluetoothActivity extends AppCompatActivity {
         setProgressBarIndeterminateVisibility(true);
         setTitle(getResources().getText(R.string.scanning).toString());
         findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
-        if (m_BtAdapter.isDiscovering()) {
-            m_BtAdapter.cancelDiscovery();
+        if (btAdapter_.isDiscovering()) {
+            btAdapter_.cancelDiscovery();
         }
-        m_BtAdapter.startDiscovery();
+        btAdapter_.startDiscovery();
     }
 
     private ListView.OnItemClickListener m_deviceClickListener = new ListView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
-        m_BtAdapter.cancelDiscovery();
+        btAdapter_.cancelDiscovery();
         String info = ((TextView) v).getText().toString();
         String address = info.substring(info.length() - 17);
         Intent intent = new Intent();
@@ -99,13 +99,13 @@ public class ScanBluetoothActivity extends AppCompatActivity {
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                    m_newDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                    newDevicesArrayAdapter_.add(device.getName() + "\n" + device.getAddress());
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 setProgressBarIndeterminateVisibility(false);
                 setTitle(R.string.select_device);
-                if (m_newDevicesArrayAdapter.getCount() == 0) {
-                    m_newDevicesArrayAdapter.add(getResources().getText(R.string.none_found).toString());
+                if (newDevicesArrayAdapter_.getCount() == 0) {
+                    newDevicesArrayAdapter_.add(getResources().getText(R.string.none_found).toString());
                 }
             }
         }

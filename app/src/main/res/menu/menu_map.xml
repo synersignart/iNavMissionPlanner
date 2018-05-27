@@ -2,11 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/action_connect"
+        android:title="Connect" />
+    <item
         android:id="@+id/action_receive_wp"
-        android:title="Receive" />
+        android:title="Receive mission" />
     <item
         android:id="@+id/action_send_wp"
-        android:title="Send" />
+        android:title="Send mission" />
     <item
         android:id="@+id/action_load_mission"
         android:title="Load mission" />

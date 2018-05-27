@@ -192,6 +192,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.action_clear_mission:
                 clearMission();
                 return true;
+            case R.id.action_connect:
+                App.getInstance().connect();
+                return true;
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -383,9 +387,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     }
 
+    private void showActivityStatus() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivityForResult(intent,Const.ACTIVITY_MAIN);
+    }
+
+    public void onBtnStatus(View v) {
+        showActivityStatus();
+    }
+
+    /*
     @Override
     public void onBackPressed ()
     {
         moveTaskToBack (true);
-    }
+    }*/
 }

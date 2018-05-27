@@ -17,8 +17,6 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static App m_app = null;
-
     Handler handler = new Handler()
     {
         public void handleMessage(Message msg)
@@ -44,14 +42,15 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                m_app.connect();
+                App.getInstance().connect();
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
         });
 
-        m_app = new App(getApplicationContext(), handler);
-        m_app.setMAC("20:15:07:20:66:45");
+       // m_app = new App(getApplicationContext(), handler);
+//        m_app.setMAC("20:15:07:20:66:45");
+        App.getInstance().setHandler(handler);
         m_handlerUpdateUI.postDelayed(m_runnableUpdateUI, Const.refreshRateUI);
     }
 
@@ -80,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
                 showActivityMap();
                 return true;
             case R.id.action_connect_bluetooth:
-                m_app.connect();
+                App.getInstance().connect();
                 return true;
             case R.id.action_disconnect_bluetooth:
-                m_app.disconnect();
+                App.getInstance().disconnect();
                 return true;
         }
 
@@ -118,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
             case Const.ACTIVITY_SCAN_BLUETOOTH_DEVICES:
                 if (resultCode == Activity.RESULT_OK) {
                     String address = data.getExtras().getString(Const.EXTRA_DEVICE_ADDRESS);
-                    m_app.setMAC(address);
+                    App.getInstance().setMAC(address);
                 }
                 break;
             default:
@@ -127,11 +126,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MspHandler getData() {
-        return m_app.getMsp();
+        return App.getInstance().getMsp();
     }
 
     private IComm getComm() {
-        return m_app.getComm();
+        return App.getInstance().getComm();
     }
 
     Handler m_handlerUpdateUI = new Handler();

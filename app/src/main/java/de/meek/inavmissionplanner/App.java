@@ -7,48 +7,67 @@ import java.util.LinkedList;
 
 public class App {
 
-    private String m_macAddress = null;
-    public int m_serialPortBaudRate = 115200;
-    public Handler m_handler = null;
-    public static App m_app = null;
-    private IComm m_comm = null;
-    private int m_refreshRate = 500;
-    private int m_sendRate = 20;
-    private MspHandler m_mspHandler = new MspHandler();
+    private String macAddress_ = "20:15:07:20:66:45";
+    public int serialPortBaudRate_ = 115200;
+    public Handler handler_ = null;
+    private IComm comm_ = new BluetoothComm();
+    private int sendRate_ = 20;
+    private MspHandler msp_ = new MspHandler();
+    LinkedList<byte[]> requests_ = new LinkedList<>();
+    private static App instance_;
 
+    public static App getInstance()
+    {
+        if (instance_ == null) {
+            synchronized(App.class) {
+                if (instance_ == null)
+                    instance_ = new App();
+                }
+            }
+        return instance_;
+    }
+
+    private App()
+    {
+    }
+
+    public void setHandler(Handler handler) {
+        comm_.setHandler(handler);
+        handler_ = handler;
+    }
+
+  /*
     public App(Context context, Handler handler)
     {
         this.m_app = this;
         this.m_handler = handler;
         m_comm = new BluetoothComm(context, handler);
     }
-
+*/
     public MspHandler getMsp() {
-        return m_mspHandler;
+        return msp_;
     }
 
     public IComm getComm() {
-        return m_comm;
+        return comm_;
     }
 
     public void connect() {
-        m_threadSender = new Thread(m_runnableSender);
-        m_threadSender.start();
+        threadSender_ = new Thread(runnableSender_);
+        threadSender_.start();
     }
 
     public void disconnect() {
-        m_comm.close();
+        comm_.close();
     }
 
     public void setMAC(String mac) {
-        m_macAddress = mac;
+        macAddress_ = mac;
     }
 
-    LinkedList<byte[]> m_requests = new LinkedList<>();
-
     public void request(byte[] data) {
-        synchronized (m_requests) {
-            m_requests.addLast(data);
+        synchronized (requests_) {
+            requests_.addLast(data);
         }
     }
 
@@ -56,7 +75,7 @@ public class App {
         @Override
         public void run() {
 
-            while(m_comm.isConnected()) {
+            while(comm_.isConnected()) {
 
                 try {
                     Thread.sleep(500);
@@ -64,40 +83,39 @@ public class App {
                     e.printStackTrace();
                 }
 
-                request(m_mspHandler.serialize_MSP_STATUS_Request());
-                request(m_mspHandler.serialize_MSP_SONAR_ALTITUDE_Request());
-                request(m_mspHandler.serialize_MSP_RAW_GPS_Request());
-                request(m_mspHandler.serialize_MSP_RC_Request());
+                request(msp_.serialize_MSP_STATUS_Request());
+                request(msp_.serialize_MSP_SONAR_ALTITUDE_Request());
+                request(msp_.serialize_MSP_RAW_GPS_Request());
+                request(msp_.serialize_MSP_RC_Request());
             }
         }
     };
 
-    Runnable m_runnableSender = new Runnable() {
+    Runnable runnableSender_ = new Runnable() {
         @Override
         public void run() {
 
-            ((BluetoothComm)m_comm).connect(m_macAddress, m_serialPortBaudRate);
+            ((BluetoothComm)comm_).connect(macAddress_, serialPortBaudRate_);
 
-            if (m_comm.isConnected()) {
-                m_threadReceiver = new Thread(m_runnableReceiver);
-                m_threadReceiver.start();
-                m_threadCyclicRequest = new Thread(m_runnableCyclicRequest);
-                m_threadCyclicRequest.start();
+            if (comm_.isConnected()) {
+                threadReceiver_ = new Thread(runnableReceiver_);
+                threadReceiver_.start();
+                threadCyclicRequest_ = new Thread(m_runnableCyclicRequest);
+                threadCyclicRequest_.start();
             }
 
-            while(m_comm.isConnected()) {
+            while(comm_.isConnected()) {
 
                 byte[] data = null;
-                synchronized (m_requests) {
-                    if (!m_requests.isEmpty()) {
-                        data = m_requests.removeFirst();
-                        m_comm.write(data);
+                synchronized (requests_) {
+                    if (!requests_.isEmpty()) {
+                        data = requests_.removeFirst();
+                        comm_.write(data);
                     }
                 }
 
-
                 try {
-                    Thread.sleep(m_sendRate);
+                    Thread.sleep(sendRate_);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -105,15 +123,15 @@ public class App {
         }
     };
 
-    Runnable m_runnableReceiver = new Runnable() {
+    Runnable runnableReceiver_ = new Runnable() {
         @Override
         public void run() {
 
-            while(m_comm.isConnected()) {
+            while(comm_.isConnected()) {
 
-                while (m_comm.dataAvailable()) {
-                    byte b = m_comm.read();
-                    m_mspHandler.parse(b);
+                while (comm_.dataAvailable()) {
+                    byte b = comm_.read();
+                    msp_.parse(b);
                 }
 
                 try {
@@ -125,7 +143,7 @@ public class App {
         }
     };
 
-    Thread m_threadCyclicRequest = null;
-    Thread m_threadSender = null;
-    Thread m_threadReceiver = null;
+    Thread threadCyclicRequest_ = null;
+    Thread threadSender_ = null;
+    Thread threadReceiver_ = null;
 }

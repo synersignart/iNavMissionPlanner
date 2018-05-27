@@ -17,97 +17,104 @@ import java.util.UUID;
 
 public class BluetoothComm implements IComm {
 
-    private Handler m_handler;
-    private Context m_context;
-    private BluetoothAdapter m_btAdapter = null;
-    private BluetoothSocket m_btSocket = null;
-    private boolean m_connected = false;
-    private int m_rx = 0;
-    private int m_tx = 0;
+    private Handler handler_ = null;
+    private BluetoothAdapter btAdapter_ = null;
+    private BluetoothSocket btSocket_ = null;
+    private boolean connected_ = false;
+    private boolean enabled_ = false;
+    private int rx_ = 0;
+    private int tx_ = 0;
 
-    private OutputStream m_outStream = null;
-    private InputStream m_inStream = null;
+    private OutputStream outStream_ = null;
+    private InputStream inStream_ = null;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    public BluetoothComm(Context context, Handler handler) {
-        this.m_context = context;
-        this.m_handler = handler;
-        enable();
+    public BluetoothComm() {
+    }
+
+    public void setHandler(Handler handler) {
+        handler_ = handler;
     }
 
     @Override
     public int rx() {
-        return m_rx;
+        return rx_;
     }
 
     @Override
     public int tx() {
-        return m_tx;
+        return tx_;
     }
 
     public boolean isConnected() {
-        return m_connected;
+        return connected_;
     }
 
     public void showToast(final String toast) {
         Message m = new Message();
         m.what = 0;
         m.obj = toast;
-        m_handler.sendMessage(m);
+        if (handler_ != null) {
+            handler_.sendMessage(m);
+        }
     }
 
 
     public void enable() {
-        //showToast(m_context.getString(R.string.bt_starting));
-
-        m_btAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (m_btAdapter == null) {
-            showToast(m_context.getString(R.string.bt_not_available));
+        btAdapter_ = BluetoothAdapter.getDefaultAdapter();
+        if (btAdapter_ == null) {
+            showToast("Bluetooth not available");
             return;
         }
 
-        if (!m_btAdapter.isEnabled()) {
-            showToast(m_context.getString(R.string.bt_starting));
-            m_btAdapter.enable();
+        if (!btAdapter_.isEnabled()) {
+            showToast("Enabling Bluetooth");
+            btAdapter_.enable();
             return;
         }
+        enabled_ = true;
     }
 
     public boolean connect(String address, int speed) {
-        showToast(m_context.getString(R.string.connecting));
 
-        if (m_btAdapter.isEnabled()) {
+        if (!enabled_) {
+            enable();
+        }
+
+        showToast("Connecting");
+
+        if (btAdapter_.isEnabled()) {
             try {
                 getRemoteDevice(address);
-                m_btSocket.connect();
-                m_connected = true;
-                showToast(m_context.getString(R.string.connected));
+                btSocket_.connect();
+                connected_ = true;
+                showToast("Connected");
             } catch (IOException e) {
                 try {
-                    m_btSocket.close();
-                    m_connected = false;
-                    showToast(m_context.getString(R.string.bt_unable_to_connect));
+                    btSocket_.close();
+                    connected_ = false;
+                    showToast("Failed to connect (1)");
                 } catch (IOException e2) {
-                    showToast(m_context.getString(R.string.bt_connection_failure));
+                    showToast("Failed to connect (2)");
                 }
             }
 
             try {
-                m_outStream = m_btSocket.getOutputStream();
-                m_inStream = m_btSocket.getInputStream();
+                outStream_ = btSocket_.getOutputStream();
+                inStream_ = btSocket_.getInputStream();
             } catch (IOException e) {
                 showToast("Stream creation failed");
             }
         }
-        return m_connected;
+        return connected_;
     }
 
     public boolean dataAvailable() {
         boolean ret = false;
 
         try {
-            if (m_connected)
-                ret = m_inStream.available() > 0;
+            if (connected_)
+                ret = inStream_.available() > 0;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -117,8 +124,8 @@ public class BluetoothComm implements IComm {
     public byte read() {
         byte ret = 0;
         try {
-            ret = (byte) m_inStream.read();
-            m_rx++;
+            ret = (byte) inStream_.read();
+            rx_++;
         } catch (IOException e) {
             showToast("Read error");
         }
@@ -127,10 +134,10 @@ public class BluetoothComm implements IComm {
 
     public void write(byte[] arr) {
         try {
-                if (m_connected) {
-                    m_outStream.write(arr);
-                    m_outStream.flush();
-                    m_tx += arr.length;
+                if (connected_) {
+                    outStream_.write(arr);
+                    outStream_.flush();
+                    tx_ += arr.length;
                 }
         } catch (IOException e) {
             close();
@@ -140,43 +147,43 @@ public class BluetoothComm implements IComm {
 
     public void disable() {
         try {
-            m_btAdapter.disable();
+            btAdapter_.disable();
         } catch (Exception e) {
             showToast("Failed to disable BT");
         }
     }
 
     private void getRemoteDevice(String address) {
-        BluetoothDevice device = m_btAdapter.getRemoteDevice(address);
+        BluetoothDevice device = btAdapter_.getRemoteDevice(address);
         try {
-            m_btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+            btSocket_ = device.createRfcommSocketToServiceRecord(MY_UUID);
         } catch (IOException e) {
-            showToast(m_context.getString(R.string.bt_unable_to_connect));
+            showToast("RFComm failed");
         }
 
-        if (m_btAdapter.isDiscovering()) {
-            m_btAdapter.cancelDiscovery();
+        if (btAdapter_.isDiscovering()) {
+            btAdapter_.cancelDiscovery();
         }
     }
 
     public void close() {
-        if (m_outStream != null) {
+        if (outStream_ != null) {
             try {
-                m_outStream.flush();
+                outStream_.flush();
             } catch (IOException e) {
                 showToast("Unable to close socket");
             }
         }
 
         try {
-            if (m_btSocket != null) {
-                m_btSocket.close();
+            if (btSocket_ != null) {
+                btSocket_.close();
             }
-            Toast.makeText(m_context, m_context.getString(R.string.disconnected), Toast.LENGTH_LONG).show();
+            showToast("disconnected");
 
         } catch (Exception e2) {
             showToast("Unable to close socket");
         }
-        m_connected = false;
+        connected_ = false;
     }
 }
