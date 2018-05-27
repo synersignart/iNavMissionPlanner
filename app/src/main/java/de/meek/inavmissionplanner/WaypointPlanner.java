@@ -14,12 +14,16 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class WaypointPlanner {
 
-//    ArrayList<Marker> marker_ = new ArrayList<>();
     Polyline polyline_ = null;
     int polyColor_ = Color.DKGRAY;
+    HashMap<Mavlink.MissionItem, Marker> markers_ = new HashMap<>();
+    ArrayList<LatLng> waypointPolylist_ = new ArrayList<LatLng>();
+    Mavlink.MissionPlan plan_ = null;
+    GoogleMap map_ = null;
 
 
     void updatePolyline(GoogleMap map)
@@ -33,7 +37,6 @@ public class WaypointPlanner {
         polyline_.setPoints(waypointPolylist_);
     }
 
-    HashMap<Mavlink.MissionItem, Marker> markers_ = new HashMap<>();
 
     private void setWaypointMarker(Mavlink.MissionItem wp, int i, GoogleMap map) {
 
@@ -41,10 +44,7 @@ public class WaypointPlanner {
         if (!markers_.containsKey(wp)) {
             marker = map.addMarker(new MarkerOptions()
                             .position(wp.getLatLng())
-//                .anchor(0.5f, 0.5f)
                             .draggable(true)
-
-                    //        .snippet(wp.toString())
             );
             marker.setTag(wp);
             markers_.put(wp, marker);
@@ -53,8 +53,8 @@ public class WaypointPlanner {
             marker.setPosition(wp.getLatLng());
         }
 
-        marker.setTitle(String.format("%d", i));
-        marker.setSnippet(wp.detail());
+//        marker.setTitle(String.format("%d", i));
+//        marker.setSnippet(wp.detail());
         float col = (i == 0) ? BitmapDescriptorFactory.HUE_GREEN : BitmapDescriptorFactory.HUE_ORANGE;
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(col));
     }
@@ -99,8 +99,7 @@ public class WaypointPlanner {
         }
     }
 
-
-    private void updateWaypoint(Mavlink.MissionItem wp, int i, GoogleMap map) {
+    private boolean updateWaypoint(Mavlink.MissionItem wp, int i, GoogleMap map) {
 
         switch (wp.command) {
             case Mavlink.MissionItem.MAV_CMD_NAV_WAYPOINT:
@@ -108,20 +107,29 @@ public class WaypointPlanner {
 
                 waypointPolylist_.add(wp.getLatLng());
                 setWaypointMarker(wp, i, map);
-            } break;
+            } return true;
+            default:
+                return false;
         }
     }
 
-    ArrayList<LatLng> waypointPolylist_ = new ArrayList<LatLng>();
-    Mavlink.MissionPlan plan_ = null;
-    GoogleMap map_ = null;
+    private void deleteAllMarkers() {
+
+        for(Map.Entry<Mavlink.MissionItem, Marker> entry : markers_.entrySet()) {
+            entry.getValue().remove();
+        }
+        markers_.clear();
+    }
 
     public void update() {
-        if(map_ != null && plan_ != null) {
+        waypointPolylist_.clear();
+        deleteAllMarkers();
+        if((map_ != null) && (plan_ != null)) {
             int i=0;
-            waypointPolylist_.clear();
             for (Mavlink.MissionItem wp : plan_.mission.items) {
-                updateWaypoint(wp, i++, map_);
+                if (updateWaypoint(wp, i, map_)) {
+                    i++;
+                }
             }
             updatePolyline(map_);
         }

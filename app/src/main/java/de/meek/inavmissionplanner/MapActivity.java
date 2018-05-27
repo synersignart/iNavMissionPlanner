@@ -11,11 +11,16 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Toast;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
@@ -33,6 +38,7 @@ import com.samsung.sprc.fileselector.FileSelector;
 import com.samsung.sprc.fileselector.OnHandleFileListener;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, AdapterView.OnItemClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMarkerClickListener, GoogleApiClient.ConnectionCallbacks {
 
@@ -191,11 +197,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         return super.onOptionsItemSelected(item);
     }
 
-    OnHandleFileListener mLoadFileListener = new OnHandleFileListener() {
+    OnHandleFileListener loadFileListener_ = new OnHandleFileListener() {
         @Override
         public void handleFile(final String filePath) {
 //            Toast.makeText(MapActivity.this, "Load: " + filePath, Toast.LENGTH_SHORT).show();
-            Uri uri = Uri.parse("file://"+filePath);
+            Uri uri = Uri.parse("file://" + filePath);
             String jsonStr = null;
             try {
                 InputStream inputStream = getContentResolver().openInputStream(uri);
@@ -208,7 +214,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     };
 
@@ -229,6 +234,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             throw e;
         }
     }
+
     private void loadMission() {
         if (!checkPermissionForReadExtertalStorage()) {
             try {
@@ -237,31 +243,28 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
         }
-
-//        Intent intent = new Intent()
-//                .setType("*/*")
-//                .setAction(Intent.ACTION_GET_CONTENT);
-//        startActivityForResult(Intent.createChooser(intent, "Load mission"), Const.REQUEST_CODE_LOAD_MISSION);*/
-
-
-
-        final String[] mFileFilter = { "*.*", ".jpeg", ".txt", ".png" };
-        new FileSelector(MapActivity.this, FileOperation.LOAD, mLoadFileListener, mFileFilter).show();
-
-
+        new FileSelector(MapActivity.this, FileOperation.LOAD, loadFileListener_, null).show();
     }
 
-    OnHandleFileListener mSaveFileListener = new OnHandleFileListener() {
+    OnHandleFileListener saveFileListener_ = new OnHandleFileListener() {
         @Override
         public void handleFile(final String filePath) {
-            Toast.makeText(MapActivity.this, "Save: " + filePath, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(MapActivity.this, "Save: " + filePath, Toast.LENGTH_SHORT).show();
+            try {
+                Uri uri = Uri.parse("file://" + filePath);
+                String str = mavlin_.convertMissionToJSON(missonPlan_);
+                OutputStream stream = getContentResolver().openOutputStream(uri);
+                stream.write(str.getBytes());
+                stream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     };
 
 
     private void saveMission() {
-        final String[] mFileFilter = { "*.*", ".jpeg", ".txt", ".png" };
-        new FileSelector(MapActivity.this, FileOperation.SAVE, mSaveFileListener, mFileFilter).show();
+        new FileSelector(MapActivity.this, FileOperation.SAVE, saveFileListener_, null).show();
     }
 
     private void clearMission() {
@@ -333,5 +336,56 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     public void onBtnAddDroneWP(View v) {
         addWaypoint(copterPos_, 2);
+    }
+
+    public void onBtnEditWP(View v) {
+        showPopup(selectedWaypoint_);
+    }
+
+
+    private void showPopup(final Mavlink.MissionItem wp) {
+
+        if (wp == null)
+            return;
+
+        LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+
+        View popupView = layoutInflater.inflate(R.layout.popup_waypoint, null);
+
+        final PopupWindow popup = new PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT, true);
+
+        popup.setTouchable(true);
+        popup.setFocusable(true);
+        popup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+
+        final EditText alt = (EditText)popupView.findViewById(R.id.editAltitude);
+        alt.setText( "" + wp.getAltitude() );
+
+        ((Button) popupView.findViewById(R.id.btnCancel)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popup.dismiss();
+            }
+        });
+        ((Button) popupView.findViewById(R.id.btnOK)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    float altitude = Float.parseFloat(alt.getText().toString());
+                    wp.setAltitude(altitude);
+                    popup.dismiss();
+                } catch (Exception e) {
+                }
+            }
+        });
+
+    }
+
+    @Override
+    public void onBackPressed ()
+    {
+        moveTaskToBack (true);
     }
 }

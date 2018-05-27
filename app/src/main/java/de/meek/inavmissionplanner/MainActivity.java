@@ -90,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void onBtnShowMap(View v) {
+        showActivityMap();
+    }
+
     void showActivityScanBluetoothDevices()
     {
         Intent intent = new Intent(this, ScanBluetoothActivity.class);

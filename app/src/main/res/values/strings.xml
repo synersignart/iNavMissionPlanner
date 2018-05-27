@@ -32,7 +32,7 @@
     <string name="loadButtonText">Load</string>
     <string name="accessDenied">Access denied</string>
     <string name="missingFile">No such file</string>
-    <string name="newFolderButtonText">New folder</string>
+    <string name="newFolderButtonText">folder</string>
     <string name="newFolderDialogMessage">Create new folder</string>
     <string name="createButtonText">Create</string>
     <string name="folderCreationOk">Folder created sucessfully</string>

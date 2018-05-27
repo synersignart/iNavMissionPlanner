@@ -48,7 +48,7 @@ public class FileSelector {
 	 * Indicates current location in the directory structure displayed in the
 	 * dialog.
 	 */
-	private File mCurrentLocation;
+	private static File mCurrentLocation = null;
 
 	/**
 	 * The file selector dialog.
@@ -77,11 +77,13 @@ public class FileSelector {
 		mContext = context;
 		mOnHandleFileListener = onHandleFileListener;
 
-		final File sdCard = Environment.getExternalStorageDirectory();
-		if (sdCard.canRead()) {
-			mCurrentLocation = sdCard;
-		} else {
-			mCurrentLocation = Environment.getRootDirectory();
+		if (mCurrentLocation == null) {
+			final File sdCard = Environment.getExternalStorageDirectory();
+			if (sdCard.canRead()) {
+				mCurrentLocation = sdCard;
+			} else {
+				mCurrentLocation = Environment.getRootDirectory();
+			}
 		}
 
 		mDialog = new Dialog(context);

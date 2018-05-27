@@ -75,6 +75,17 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:id="@+id/btnEditWP"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:onClick="onBtnEditWP"
+        android:text="E"
+        app:layout_constraintStart_toEndOf="@+id/btnDownWP"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
         android:id="@+id/btnAddWPCenter"
         android:layout_width="48dp"
         android:layout_height="wrap_content"

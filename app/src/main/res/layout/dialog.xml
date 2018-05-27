@@ -23,13 +23,14 @@
 			android:orientation="vertical"
 			android:padding="10dp">
 
-			<TextView
-				android:id="@+id/fileTextView1"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:padding="10dp"
-				android:text="@string/enterFileName"
-				android:textAppearance="?android:attr/textAppearanceMedium" />
+            <TextView
+                android:id="@+id/fileTextView1"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:padding="10dp"
+                android:text="@string/enterFileName"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:visibility="invisible" />
 
 			<EditText
 				android:id="@+id/fileName"
@@ -69,10 +70,11 @@
 					android:text="@string/newFolderButtonText" />
 			</LinearLayout>
 
-			<Spinner
-				android:id="@+id/fileFilter"
-				android:layout_width="fill_parent"
-				android:layout_height="wrap_content" />
+            <Spinner
+                android:id="@+id/fileFilter"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:visibility="invisible" />
 		</LinearLayout>
 	</ScrollView>
 </LinearLayout>

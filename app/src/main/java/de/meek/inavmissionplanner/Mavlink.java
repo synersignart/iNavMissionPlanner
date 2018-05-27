@@ -127,4 +127,10 @@ public class Mavlink {
         }
         return null;
     }
+
+    public String convertMissionToJSON(MissionPlan plan) {
+        Gson gson = new Gson();
+        String str = gson.toJson(plan);
+        return str;
+    }
 }
