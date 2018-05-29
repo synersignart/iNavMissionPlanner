@@ -8,11 +8,10 @@
     tools:context=".MapActivity"
     tools:showIn="@layout/activity_map">
 
-    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/relativeLayout2"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutMap"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="64dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,79 +40,89 @@
             app:layout_constraintTop_toTopOf="parent" />
     </android.support.constraint.ConstraintLayout>
 
-    <Button
-        android:id="@+id/btnDelWP"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnDeleteWP"
-        android:text="-"
-        app:layout_constraintStart_toEndOf="@+id/btnAddWPDrone"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btnUpWP"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnMoveUpWP"
-        android:text="▲"
-        app:layout_constraintStart_toEndOf="@+id/btnDelWP"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btnDownWP"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnMoveDownWP"
-        android:text="▼"
-        app:layout_constraintStart_toEndOf="@+id/btnUpWP"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btnAddWPCenter"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnAddCenterWP"
-        android:text="+"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutEditMission"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/btnAddWPDrone"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnAddDroneWP"
-        android:text="x"
-        app:layout_constraintStart_toEndOf="@+id/btnAddWPCenter"
-        app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/btnAddWPCenter"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnAddCenterWP"
+            android:text="+"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btnEditWP"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnEditWP"
-        android:text="E"
-        app:layout_constraintStart_toEndOf="@+id/btnDownWP"
-        app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/btnAddWPDrone"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnAddDroneWP"
+            android:text="x"
+            app:layout_constraintStart_toEndOf="@+id/btnAddWPCenter"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btnStatus"
-        android:layout_width="48dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onBtnStatus"
-        android:text="S"
-        app:layout_constraintStart_toEndOf="@+id/btnEditWP"
-        app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/btnUpWP"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnMoveUpWP"
+            android:text="▲"
+            app:layout_constraintStart_toEndOf="@+id/btnDelWP"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnEditWP"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnEditWP"
+            android:text="E"
+            app:layout_constraintStart_toEndOf="@+id/btnDownWP"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnDelWP"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnDeleteWP"
+            android:text="-"
+            app:layout_constraintStart_toEndOf="@+id/btnAddWPDrone"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnStatus"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnStatus"
+            android:text="S"
+            app:layout_constraintStart_toEndOf="@+id/btnEditWP"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnDownWP"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:onClick="onBtnMoveDownWP"
+            android:text="▼"
+            app:layout_constraintStart_toEndOf="@+id/btnUpWP"
+            app:layout_constraintTop_toTopOf="parent" />
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.constraint.ConstraintLayout>

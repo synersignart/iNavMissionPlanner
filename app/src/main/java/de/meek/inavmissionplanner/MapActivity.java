@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -223,7 +224,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void showEditMission()
     {
-
+        ConstraintLayout layout = (ConstraintLayout) findViewById(R.id.layoutEditMission);
+        layout.setVisibility((layout.getVisibility() == View.VISIBLE) ? View.INVISIBLE : View.VISIBLE);
     }
 
     private void showActivitySettings()
