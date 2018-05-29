@@ -195,10 +195,46 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.action_connect:
                 App.getInstance().connect();
                 return true;
-
+            case R.id.action_map_hybrid:
+                setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                return true;
+            case R.id.action_map_normal:
+                setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                return true;
+            case R.id.action_map_terrain:
+                setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                return true;
+            case R.id.action_map_satellite:
+                setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                return true;
+            case R.id.action_status:
+                showActivityStatus();
+                return true;
+            case R.id.action_mode_settings:
+                showActivitySettings();
+                return true;
+            case R.id.action_edit_mission:
+                showEditMission();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showEditMission()
+    {
+
+    }
+
+    private void showActivitySettings()
+    {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent,Const.ACTIVITY_SETTINGS);
+    }
+
+    private void setMapType(int i)
+    {
+        map_.setMapType(i);
     }
 
     OnHandleFileListener loadFileListener_ = new OnHandleFileListener() {
