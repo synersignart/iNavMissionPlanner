@@ -77,6 +77,8 @@ public class BluetoothComm implements IComm {
 
     public boolean connect(String address, int speed) {
 
+        connected_ = false;
+
         if (!enabled_) {
             enable();
         }
@@ -85,18 +87,15 @@ public class BluetoothComm implements IComm {
 
         if (btAdapter_.isEnabled()) {
             try {
-                getRemoteDevice(address);
+                btSocket_ = getRemoteDevice(address);
                 btSocket_.connect();
-                connected_ = true;
-                showToast("Connected");
             } catch (IOException e) {
                 try {
                     btSocket_.close();
-                    connected_ = false;
                     showToast("Failed to connect (1)");
                 } catch (IOException e2) {
-                    showToast("Failed to connect (2)");
                 }
+                return false;
             }
 
             try {
@@ -106,6 +105,9 @@ public class BluetoothComm implements IComm {
                 showToast("Stream creation failed");
             }
         }
+
+        showToast("Connected");
+        connected_ = true;
         return connected_;
     }
 
@@ -153,37 +155,48 @@ public class BluetoothComm implements IComm {
         }
     }
 
-    private void getRemoteDevice(String address) {
+    private BluetoothSocket getRemoteDevice(String address) {
         BluetoothDevice device = btAdapter_.getRemoteDevice(address);
+        BluetoothSocket socket = null;
         try {
-            btSocket_ = device.createRfcommSocketToServiceRecord(MY_UUID);
+            socket = device.createRfcommSocketToServiceRecord(MY_UUID);
         } catch (IOException e) {
-            showToast("RFComm failed");
+            showToast("BT Socket create failed");
         }
 
         if (btAdapter_.isDiscovering()) {
             btAdapter_.cancelDiscovery();
         }
+        return socket;
     }
 
     public void close() {
         if (outStream_ != null) {
             try {
                 outStream_.flush();
+                outStream_.close();
             } catch (IOException e) {
-                showToast("Unable to close socket");
+            }
+        }
+
+        if (inStream_ != null) {
+            try {
+                inStream_.close();
+            } catch (IOException e) {
             }
         }
 
         try {
             if (btSocket_ != null) {
                 btSocket_.close();
+                btSocket_ = null;
             }
-            showToast("disconnected");
-
-        } catch (Exception e2) {
-            showToast("Unable to close socket");
+        } catch (Exception e) {
+//            showToast("Unable to close socket");
         }
+        showToast("disconnected");
+        outStream_ = null;
+        inStream_ = null;
         connected_ = false;
     }
 }

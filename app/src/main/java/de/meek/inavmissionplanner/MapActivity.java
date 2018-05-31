@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
@@ -19,9 +20,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
@@ -58,6 +61,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        showControlsEditMission(false);
 
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -73,6 +77,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        _handlerUpdateUI.postDelayed(_runnableUpdateUI, Const.refreshRateUI);
+        handlerUpdateCopterPos_.postDelayed(runnableUpdateCopterPos_, Const.refreshRateUI);
     }
 
     @Override
@@ -194,7 +201,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 clearMission();
                 return true;
             case R.id.action_connect:
-                App.getInstance().connect();
+                getApp().connect();
                 return true;
             case R.id.action_map_hybrid:
                 setMapType(GoogleMap.MAP_TYPE_HYBRID);
@@ -215,17 +222,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 showActivitySettings();
                 return true;
             case R.id.action_edit_mission:
-                showEditMission();
+                toggleControlsEditMission();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void showEditMission()
+    private void toggleControlsEditMission() {
+        ConstraintLayout layout = (ConstraintLayout) findViewById(R.id.layoutEditMission);
+        showControlsEditMission(layout.getVisibility() != View.VISIBLE);
+    }
+
+    private void showControlsEditMission(boolean visible)
     {
         ConstraintLayout layout = (ConstraintLayout) findViewById(R.id.layoutEditMission);
-        layout.setVisibility((layout.getVisibility() == View.VISIBLE) ? View.INVISIBLE : View.VISIBLE);
+        layout.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
     }
 
     private void showActivitySettings()
@@ -422,7 +434,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 }
             }
         });
-
     }
 
     private void showActivityStatus() {
@@ -433,11 +444,59 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onBtnStatus(View v) {
         showActivityStatus();
     }
+    
+    public IComm getComm() {
+        return getApp().getComm();
+    }
+    
+    public App getApp() {
+        return App.getInstance();
+    }
 
-    /*
-    @Override
-    public void onBackPressed ()
+    public void onBtnConnect(View v) {
+        if (getComm().isConnected())
+            getApp().disconnect();
+        else 
+            getApp().connect();
+    }
+    
+    Handler _handlerUpdateUI = new Handler();
+    Runnable _runnableUpdateUI = new Runnable() {
+        @Override
+        public void run() {
+
+            String txt = "";
+            if (getComm().isConnected())
+                txt += "  connected, ";
+            else
+                txt += "  disconnected, ";
+            if (getData().gpsFix2d)
+                txt += "2D fix: ";
+            else if (getData().gpsFix3d)
+                txt += "3D fix: ";
+            else
+                txt += "no fix: ";
+            txt +=  + getData().gpsNumSats + " sats";
+
+            ((TextView)findViewById(R.id.tvStatus)).setText(txt);
+            _handlerUpdateUI.postDelayed(this, Const.refreshRateUI);
+        }
+    };
+
+    MspHandler getData()
     {
-        moveTaskToBack (true);
-    }*/
+        return getApp().getMsp();
+    }
+
+    Handler handlerUpdateCopterPos_ = new Handler();
+    Runnable runnableUpdateCopterPos_ = new Runnable() {
+        @Override
+        public void run() {
+
+            copterPos_ = new LatLng(getData().gpsLat / Math.pow(10, 7), getData().gpsLon / Math.pow(10, 7));
+            copterMarker_.setPosition(copterPos_);
+            handlerUpdateCopterPos_.postDelayed(this, Const.refreshRateUI);
+        }
+    };
+
 }
