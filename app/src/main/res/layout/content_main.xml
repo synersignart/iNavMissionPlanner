@@ -26,7 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:text="acc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
@@ -36,46 +36,48 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="baro"
+        app:layout_constraintBottom_toBottomOf="@+id/cbMagPresent"
         app:layout_constraintStart_toEndOf="@+id/cbMagPresent"
-        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+        app:layout_constraintTop_toTopOf="@+id/cbMagPresent" />
 
     <CheckBox
         android:id="@+id/cbSonarPresent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="8dp"
         android:text="sonar"
+        app:layout_constraintBottom_toBottomOf="@+id/cbBaroPresent"
         app:layout_constraintStart_toEndOf="@+id/cbBaroPresent"
-        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+        app:layout_constraintTop_toTopOf="@+id/cbBaroPresent" />
 
     <CheckBox
         android:id="@+id/cbGpsPresent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="gps"
+        app:layout_constraintBottom_toBottomOf="@+id/cbSonarPresent"
         app:layout_constraintStart_toEndOf="@+id/cbSonarPresent"
-        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+        app:layout_constraintTop_toTopOf="@+id/cbSonarPresent" />
 
     <CheckBox
         android:id="@+id/cbMagPresent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="mag"
+        app:layout_constraintBottom_toBottomOf="@+id/cbAccPresent"
         app:layout_constraintStart_toEndOf="@+id/cbAccPresent"
-        app:layout_constraintTop_toBottomOf="@+id/cbConnected" />
+        app:layout_constraintTop_toTopOf="@+id/cbAccPresent" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/tCycleTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
         android:text="Cycle:"
         app:layout_constraintBottom_toBottomOf="@+id/cbConnected"
         app:layout_constraintStart_toEndOf="@+id/cbConnected"
@@ -88,12 +90,12 @@
         android:layout_marginStart="4dp"
         android:text="?"
         android:textColor="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="@+id/textView"
-        app:layout_constraintStart_toEndOf="@+id/textView"
-        app:layout_constraintTop_toTopOf="@+id/textView" />
+        app:layout_constraintBottom_toBottomOf="@+id/tCycleTime"
+        app:layout_constraintStart_toEndOf="@+id/tCycleTime"
+        app:layout_constraintTop_toTopOf="@+id/tCycleTime" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/tSonarAltitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -103,25 +105,58 @@
         app:layout_constraintTop_toBottomOf="@+id/cbAccPresent" />
 
     <TextView
-        android:id="@+id/tvSonarAlt"
+        android:id="@+id/tAltitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="100dp"
+        android:text="Altitude:"
+        app:layout_constraintBottom_toBottomOf="@+id/tSonarAltitude"
+        app:layout_constraintStart_toEndOf="@+id/tSonarAltitude"
+        app:layout_constraintTop_toTopOf="@+id/tSonarAltitude" />
+
+    <TextView
+        android:id="@+id/tvSonarAltitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="?"
         android:textColor="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="@+id/textView2"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintTop_toTopOf="@+id/textView2" />
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tSonarAltitude"
+        app:layout_constraintStart_toEndOf="@+id/tSonarAltitude"
+        app:layout_constraintTop_toTopOf="@+id/tSonarAltitude" />
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/tvAltitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="?"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tAltitude"
+        app:layout_constraintStart_toEndOf="@+id/tAltitude"
+        app:layout_constraintTop_toTopOf="@+id/tAltitude" />
+
+    <TextView
+        android:id="@+id/tGpsSats"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:text="GPS Sats:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tSonarAltitude" />
+
+    <TextView
+        android:id="@+id/tGpsPos"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="GPS Sats:"
+        android:text="GPS Pos:"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toBottomOf="@+id/tGpsSats" />
 
     <TextView
         android:id="@+id/tvGpsSats"
@@ -130,9 +165,10 @@
         android:layout_marginStart="8dp"
         android:text="?"
         android:textColor="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="@+id/textView4"
-        app:layout_constraintStart_toEndOf="@+id/textView4"
-        app:layout_constraintTop_toTopOf="@+id/textView4" />
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tGpsSats"
+        app:layout_constraintStart_toEndOf="@+id/tGpsSats"
+        app:layout_constraintTop_toTopOf="@+id/tGpsSats" />
 
     <CheckBox
         android:id="@+id/cbGps2dFix"
@@ -160,11 +196,11 @@
         android:layout_width="365dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="?"
         android:textColor="@android:color/black"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cbGps2dFix" />
+        app:layout_constraintBottom_toBottomOf="@+id/tGpsPos"
+        app:layout_constraintStart_toEndOf="@+id/tGpsPos"
+        app:layout_constraintTop_toTopOf="@+id/tGpsPos" />
 
     <TextView
         android:id="@+id/tvTx"
@@ -174,7 +210,7 @@
         android:layout_marginTop="8dp"
         android:text="?"
         android:textColor="@android:color/black"
-        app:layout_constraintStart_toEndOf="@+id/textView6"
+        app:layout_constraintStart_toEndOf="@+id/tTx"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -200,22 +236,22 @@
         app:layout_constraintTop_toBottomOf="@+id/tvRC1" />
 
     <TextView
-        android:id="@+id/textView6"
+        android:id="@+id/tTx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="Tx:"
         app:layout_constraintStart_toEndOf="@+id/tvCycleTime"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView7"
+        android:id="@+id/tRx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Rx:"
-        app:layout_constraintStart_toStartOf="@+id/textView6"
-        app:layout_constraintTop_toBottomOf="@+id/textView6" />
+        app:layout_constraintStart_toStartOf="@+id/tTx"
+        app:layout_constraintTop_toBottomOf="@+id/tTx" />
 
     <TextView
         android:id="@+id/tvRx"
@@ -224,22 +260,7 @@
         android:layout_marginStart="8dp"
         android:text="?"
         android:textColor="@android:color/black"
-        app:layout_constraintStart_toEndOf="@+id/textView7"
+        app:layout_constraintStart_toEndOf="@+id/tRx"
         app:layout_constraintTop_toBottomOf="@+id/tvTx" />
-
-    <Button
-        android:id="@+id/btnShowMap"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="17dp"
-        android:layout_marginEnd="280dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="256dp"
-        android:onClick="onBtnShowMap"
-        android:text="Map"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvGpsPos" />
 
 </android.support.constraint.ConstraintLayout>

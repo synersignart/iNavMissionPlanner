@@ -25,12 +25,12 @@ public class WaypointLine {
 
     private static final int POLYGON_STROKE_WIDTH_PX = 8;
     private static final int PATTERN_DASH_LENGTH_PX = 20;
-    private static final int PATTERN_GAP_LENGTH_PX = 20;
+    private static final int PATTERN_GAP_LENGTH_PX = 10;
     private static final PatternItem DOT = new Dot();
     private static final PatternItem DASH = new Dash(PATTERN_DASH_LENGTH_PX);
     private static final PatternItem GAP = new Gap(PATTERN_GAP_LENGTH_PX);
     // Create a stroke pattern of a gap followed by a dash.
-    public static final List<PatternItem> PATTERN_POLYGON_ALPHA = Arrays.asList(GAP, DASH);
+    public static final List<PatternItem> PATTERN_POLYGON_ALPHA = Arrays.asList(GAP, DOT);
 
 
     WaypointLine(int color, List<PatternItem> pattern) {

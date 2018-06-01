@@ -50,8 +50,11 @@ public class MspHandler extends Parser implements
     public short rcAux4 = 0;
 
     public ArrayList<BoxMode> boxModeList = new ArrayList<>();
-    public WaypointList rxWaypointList = new WaypointList();
-    public boolean rxWaypointListReady = false;
+    public MspWaypointList rxMspWaypointList = new MspWaypointList();
+    //public boolean rxWaypointListReady = false;
+    Handler cbModeChange_ = null;
+    Handler cbWaypointListReceived_ = null;
+
 
     public MspHandler() {
         set_MSP_STATUS_Handler(this);
@@ -119,67 +122,42 @@ public class MspHandler extends Parser implements
                 boxModeList.add(new BoxMode(i, box, aux, min, max));
             }
         }
-        if (h!=null) {
-            Message msg = new Message();
-            msg.obj = 1;
-            h.sendMessage(msg);
-
-        }
+        notifyCallback(cbModeChange_, null);
     }
 
-    Handler h;
-    public void registerModeRangeCB(Handler h)
+    public void registerCallbackModeChange(Handler h)
     {
-        this.h = h;
+        cbModeChange_ = h;
+    }
+
+    public void registerCallbackWaypointListReceived(Handler h)
+    {
+        cbWaypointListReceived_ = h;
+    }
+
+    private void notifyCallback(Handler h, Object obj) {
+        if (h != null) {
+            Message msg = new Message();
+            msg.obj = obj;
+            h.sendMessage(msg);
+        }
     }
 
     @Override
     public void handle_MSP_WP(byte nr, byte action, int lat, int lon, int alt, short p1, short p2, short p3, byte flags) {
-        rxWaypointList.add(nr, action, lat, lon, alt, p1, p2, p3, flags);
+        rxMspWaypointList.add(nr, action, lat, lon, alt, p1, p2, p3, flags);
 
         if (nr > 0 && (flags & Waypoint.FLAG_LAST) != 0) {
-            //App.getInstance().updateReceivedWayPointList(rxWaypointList);
-            rxWaypointListReady = true;
+            //App.getInstance().updateReceivedWayPointList(rxMspWaypointList);
+            notifyCallback(cbWaypointListReceived_, rxMspWaypointList);
         } else {
            App.getInstance().request(App.getInstance().getMsp().serialize_MSP_WP_2((byte)(nr+1)));
-
         }
-
     }
 
-
-/*
     public byte [] serialize_MSP_WP_2(byte nr) {
 
-        ByteBuffer bb = newByteBuffer(1);
-
-        bb.put(nr);
-
-        byte [] message = new byte[10];
-        message[0] = 36;
-        message[1] = 88;
-        message[2] = 60; // 0x3C => Request
-        message[3] = 0;
-        message[4] = (byte)118;
-        message[5] = (byte)0;
-        message[6] = 1;
-        message[7] = 0;
-        byte [] data = bb.array();
-        int k;
-        for (k=0; k<data.length; ++k) {
-            message[k+8] = data[k];
-        }
-
-        message[9] = CRC_dvb_s2(message, 3, 9);
-
-        return message;
-    }*/
-
-    public byte [] serialize_MSP_WP_2(byte nr) {
-
-        rxWaypointListReady = false;
         byte [] message = new byte[7];
-
         message[0] = 36; // 0x24
         message[1] = 77; // 0x4D
         message[2] = 60; // 0x3C => Request

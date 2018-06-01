@@ -18,10 +18,9 @@ import java.util.Map;
 
 public class WaypointOverlay {
 
-    WaypointLine lineEdit_ = new WaypointLine(Color.DKGRAY, null);
+    WaypointLine lineEdit_ = new WaypointLine(Color.CYAN, null);
     WaypointLine lineCopter_ = new WaypointLine(Color.RED, WaypointLine.PATTERN_POLYGON_ALPHA);
     HashMap<Mavlink.MissionItem, Marker> markers_ = new HashMap<>();
-//    ArrayList<LatLng> waypointPolylist_ = new ArrayList<LatLng>();
     Mavlink.MissionPlan plan_ = null;
     GoogleMap map_ = null;
 
@@ -146,4 +145,23 @@ public class WaypointOverlay {
         }
         return bounds;
     }
+
+    public void updateReceivedWayPointList(MspWaypointList list) {
+        lineCopter_.clear();
+        Waypoint rth = null;
+        if (list != null) {
+            for (Waypoint wp : list.waypoints_) {
+                if (wp.nr_ == 0) {
+                    rth = wp;
+                } else {
+                    lineCopter_.add(wp.getLatLng());
+                }
+            }
+            if (rth != null) {
+                lineCopter_.add(rth.getLatLng());
+            }
+        }
+        lineCopter_.update(map_);
+    }
+
 }

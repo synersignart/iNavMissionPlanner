@@ -143,7 +143,7 @@ public class SettingsActivity extends AppCompatActivity {
     public void onBtnReceive(View v)
     {
         Toast.makeText(this, "Receiving from FC", Toast.LENGTH_SHORT).show();
-        App.getInstance().getMsp().registerModeRangeCB(handlerUpdateList);
+        App.getInstance().getMsp().registerCallbackModeChange(handlerUpdateList);
         byte[] b = App.getInstance().getMsp().serialize_MSP_MODE_RANGES_Request();
         App.getInstance().request(b);
     }

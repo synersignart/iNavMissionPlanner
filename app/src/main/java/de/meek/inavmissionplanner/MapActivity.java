@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
@@ -80,6 +81,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         _handlerUpdateUI.postDelayed(_runnableUpdateUI, Const.refreshRateUI);
         handlerUpdateCopterPos_.postDelayed(runnableUpdateCopterPos_, Const.refreshRateUI);
+
+        getApp().getMsp().registerCallbackWaypointListReceived(handlerWaypointListReceived_);
     }
 
     @Override
@@ -203,9 +206,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.action_clear_mission:
                 clearMission();
                 return true;
-            case R.id.action_connect:
-                getApp().connect();
-                return true;
             case R.id.action_map_hybrid:
                 setMapType(GoogleMap.MAP_TYPE_HYBRID);
                 return true;
@@ -218,9 +218,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.action_map_satellite:
                 setMapType(GoogleMap.MAP_TYPE_SATELLITE);
                 return true;
-            case R.id.action_status:
-                showActivityStatus();
-                return true;
             case R.id.action_mode_settings:
                 showActivitySettings();
                 return true;
@@ -231,6 +228,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 sendWaypointsToCopter();
                 return true;
             case R.id.action_receive_wp:
+                waypointOverlay_.updateReceivedWayPointList(null);
                 getApp().requestMissionFromCopter();
                 return true;
         }
@@ -334,6 +332,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         selectedWaypoint_ = null;
         missonPlan_ = mavlin_.createEmptyMissionPlan();
         waypointOverlay_.setMissionPlan(missonPlan_);
+        waypointOverlay_.updateReceivedWayPointList(null);
         updateWaypoints();
     }
 
@@ -502,13 +501,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             txt += ", alt:" + getData().altitude;
 
             ((TextView)findViewById(R.id.tvStatus)).setText(txt);
-
-            if (getApp().getMsp().rxWaypointListReady) {
-                getApp().getMsp().rxWaypointListReady = false;
-                updateReceivedWayPointList(getApp().getMsp().rxWaypointList);
-            }
-
-
             _handlerUpdateUI.postDelayed(this, Const.refreshRateUI);
         }
     };
@@ -530,18 +522,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     };
 
     private void sendWaypointsToCopter() {
-        WaypointList wpl = new WaypointList();
+        waypointOverlay_.updateReceivedWayPointList(null);
+        MspWaypointList wpl = new MspWaypointList();
         wpl.createFromMavlinkMissionPlan(missonPlan_);
-        wpl.upload();
+        getApp().sendMissionToCopter(wpl);
+
     }
 
-    private void updateReceivedWayPointList(WaypointList list) {
-        waypointOverlay_.lineCopter_.clear();
-
-        for(Waypoint wp : list.list_) {
-            waypointOverlay_.lineCopter_.add(wp.getLatLng());
+    Handler handlerWaypointListReceived_ = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            MspWaypointList wpl = (MspWaypointList) msg.obj;
+            waypointOverlay_.updateReceivedWayPointList(wpl);
         }
+    };
 
-        waypointOverlay_.lineCopter_.update(map_);
+    public void onBtnGoToPos(View v) {
+        LatLng pos = map_.getCameraPosition().target;
+        getApp().sendGoToPosition(pos);
     }
 }

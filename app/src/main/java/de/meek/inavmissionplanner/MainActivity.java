@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+/*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 //                        .setAction("Action", null).show();
             }
         });
-
+*/
        // m_app = new App(getApplicationContext(), handler);
 //        m_app.setMAC("20:15:07:20:66:45");
         App.getInstance().setHandler(handler);
@@ -144,6 +144,9 @@ public class MainActivity extends AppCompatActivity {
             ((CheckBox)findViewById(R.id.cbSonarPresent)).setChecked(getData().sonarPresent);
             ((CheckBox)findViewById(R.id.cbBaroPresent)).setChecked(getData().baroPresent);
             ((CheckBox)findViewById(R.id.cbAccPresent)).setChecked(getData().accPresent);
+            ((CheckBox)findViewById(R.id.cbGpsPresent)).setChecked(getData().gpsPresent);
+
+
 
             ((CheckBox)findViewById(R.id.cbConnected)).setChecked(getComm().isConnected());
             ((TextView)findViewById(R.id.tvTx)).setText(""+ getComm().tx());
@@ -154,7 +157,10 @@ public class MainActivity extends AppCompatActivity {
             ((CheckBox)findViewById(R.id.cbGps3dFix)).setChecked(getData().gpsFix3d);
             ((TextView)findViewById(R.id.tvGpsPos)).setText(String.format("%d / %d" , getData().gpsLat, getData().gpsLon));
 
-            ((TextView)findViewById(R.id.tvSonarAlt)).setText(""+getData().sonarAltitude);
+            String alt = (getData().sonarAltitude == -1) ? "-" : String.format("%.2f", getData().sonarAltitude / 100.0f);
+            ((TextView)findViewById(R.id.tvSonarAltitude)).setText(alt);
+            alt = String.format("%.2f", getData().altitude / 100.0f);
+            ((TextView)findViewById(R.id.tvAltitude)).setText(alt);
 
             ((TextView)findViewById(R.id.tvRC1)).setText(String.format("Roll=%d, Pitch=%d, Yaw=%d, Throttle=%d" , getData().rcRoll, getData().rcPitch, getData().rcYaw, getData().rcThrottle));
             ((TextView)findViewById(R.id.tvRC2)).setText(String.format("Aux1=%d, Aux2=%d, Aux3=%d, Aux4=%d" , getData().rcAux1, getData().rcAux2, getData().rcAux3, getData().rcAux4));

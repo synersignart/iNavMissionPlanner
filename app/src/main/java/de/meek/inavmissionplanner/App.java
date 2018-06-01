@@ -3,6 +3,8 @@ package de.meek.inavmissionplanner;
 import android.content.Context;
 import android.os.Handler;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.LinkedList;
 
 public class App {
@@ -14,7 +16,9 @@ public class App {
     private int sendRate_ = 20;
     private MspHandler msp_ = new MspHandler();
     LinkedList<byte[]> requests_ = new LinkedList<>();
+    LinkedList<byte[]> cyclicRequests_ = new LinkedList<>();
     private static App instance_;
+    private int cyclicRequestIndex_ = 0;
 
     public static App getInstance()
     {
@@ -27,8 +31,17 @@ public class App {
         return instance_;
     }
 
+    private void initCyclicRequests() {
+        cyclicRequests_.add(msp_.serialize_MSP_STATUS_Request());
+        cyclicRequests_.add(msp_.serialize_MSP_SONAR_ALTITUDE_Request());
+        cyclicRequests_.add(msp_.serialize_MSP_ALTITUDE_Request());
+        cyclicRequests_.add(msp_.serialize_MSP_RAW_GPS_Request());
+        cyclicRequests_.add(msp_.serialize_MSP_RC_Request());
+    }
+
     private App()
     {
+        initCyclicRequests();
     }
 
     public void setHandler(Handler handler) {
@@ -36,14 +49,6 @@ public class App {
         handler_ = handler;
     }
 
-  /*
-    public App(Context context, Handler handler)
-    {
-        this.m_app = this;
-        this.m_handler = handler;
-        m_comm = new BluetoothComm(context, handler);
-    }
-*/
     public MspHandler getMsp() {
         return msp_;
     }
@@ -75,20 +80,18 @@ public class App {
         @Override
         public void run() {
 
-            while(comm_.isConnected()) {
-
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                request(msp_.serialize_MSP_STATUS_Request());
-                request(msp_.serialize_MSP_SONAR_ALTITUDE_Request());
-                request(msp_.serialize_MSP_ALTITUDE_Request());
-                request(msp_.serialize_MSP_RAW_GPS_Request());
-                request(msp_.serialize_MSP_RC_Request());
+        while(comm_.isConnected()) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+
+            cyclicRequestIndex_ %= cyclicRequests_.size();
+            byte[] cmd = cyclicRequests_.get(cyclicRequestIndex_);
+            cyclicRequestIndex_++;
+            request(cmd);
+        }
         }
     };
 
@@ -96,31 +99,31 @@ public class App {
         @Override
         public void run() {
 
-            ((BluetoothComm)comm_).connect(macAddress_, serialPortBaudRate_);
+        ((BluetoothComm)comm_).connect(macAddress_, serialPortBaudRate_);
 
-            if (comm_.isConnected()) {
-                threadReceiver_ = new Thread(runnableReceiver_);
-                threadReceiver_.start();
-                threadCyclicRequest_ = new Thread(m_runnableCyclicRequest);
-                threadCyclicRequest_.start();
-            }
+        if (comm_.isConnected()) {
+            threadReceiver_ = new Thread(runnableReceiver_);
+            threadReceiver_.start();
+            threadCyclicRequest_ = new Thread(m_runnableCyclicRequest);
+            threadCyclicRequest_.start();
+        }
 
-            while(comm_.isConnected()) {
+        while(comm_.isConnected()) {
 
-                byte[] data = null;
-                synchronized (requests_) {
-                    if (!requests_.isEmpty()) {
-                        data = requests_.removeFirst();
-                        comm_.write(data);
-                    }
-                }
-
-                try {
-                    Thread.sleep(sendRate_);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            byte[] data = null;
+            synchronized (requests_) {
+                if (!requests_.isEmpty()) {
+                    data = requests_.removeFirst();
+                    comm_.write(data);
                 }
             }
+
+            try {
+                Thread.sleep(sendRate_);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         }
     };
 
@@ -128,19 +131,19 @@ public class App {
         @Override
         public void run() {
 
-            while(comm_.isConnected()) {
+        while(comm_.isConnected()) {
 
-                while (comm_.dataAvailable()) {
-                    byte b = comm_.read();
-                    msp_.parse(b);
-                }
-
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            while (comm_.dataAvailable()) {
+                byte b = comm_.read();
+                msp_.parse(b);
             }
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         }
     };
 
@@ -150,8 +153,30 @@ public class App {
 
     void requestMissionFromCopter() {
         request(msp_.serialize_MSP_WP_2((byte)0));
-/*        request(msp_.serialize_MSP_WP_2((byte)1));
-        request(msp_.serialize_MSP_WP_2((byte)2));
-        request(msp_.serialize_MSP_WP_2((byte)3));*/
+    }
+
+    public void sendMissionToCopter(MspWaypointList list) {
+
+        byte n = 1;
+        for (Waypoint wp: list.waypoints_) {
+
+            byte flag = wp.flags_;
+            if (n == list.waypoints_.size()) {
+                flag |= Waypoint.FLAG_LAST;
+            }
+            byte[] msg = getMsp().serialize_MSP_SET_WP(n++, wp.action_, wp.lat_, wp.lon_, wp.alt_, wp.p1_, wp.p2_, wp.p3_, flag);
+            request(msg);
+        }
+
+        requestMissionFromCopter();
+    }
+
+    public void sendGoToPosition(LatLng pos) {
+
+        byte[] msg = getMsp().serialize_MSP_SET_WP((byte)255, Waypoint.ACTION_WAYPOINT,
+                Convert.getIntLatFromLatLng(pos), Convert.getIntLonFromLatLng(pos),
+                (short)200,
+                (short)0,(short)0,(short)0,(byte)0);
+        request(msg);
     }
 }

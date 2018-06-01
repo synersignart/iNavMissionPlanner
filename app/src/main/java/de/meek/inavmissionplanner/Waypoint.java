@@ -16,10 +16,12 @@ public class Waypoint {
     short p2_= 0;
     short p3_= 0;
     byte flags_= 0;
+    byte nr_ = 0;
 
     public Waypoint() {}
 
-    public Waypoint(byte action, int lat, int lon, int alt, short p1, short p2, short p3, byte flags) {
+    public Waypoint(byte nr, byte action, int lat, int lon, int alt, short p1, short p2, short p3, byte flags) {
+        nr_ = nr;
         action_ = action;
         lat_ = lat;
         lon_ = lon;
@@ -28,6 +30,10 @@ public class Waypoint {
         p2_ = p2;
         p3_ = p3;
         flags_ = flags_;
+    }
+
+    public boolean isLast() {
+        return (flags_ & FLAG_LAST) != 0;
     }
 
     public LatLng getLatLng() {
