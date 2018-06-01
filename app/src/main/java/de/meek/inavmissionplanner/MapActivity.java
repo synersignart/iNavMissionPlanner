@@ -20,7 +20,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -48,12 +47,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private GoogleMap map_;
     Marker copterMarker_;
-    LatLng copterPos_ = new LatLng(49.482248, 11.092563);
     Mavlink.MissionItem selectedWaypoint_ = null;
     Mavlink mavlin_ = new Mavlink();
-    WaypointPlanner waypointPlanner_ = new WaypointPlanner();
+    WaypointOverlay waypointOverlay_ = new WaypointOverlay();
     Mavlink.MissionPlan missonPlan_ = null;
     String chosenDir_ = null;
+    LatLng homePos_ = new LatLng(49.482248, 11.092563);
+    LatLng copterPos_ = new LatLng(49.482248, 11.192563);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +61,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        showControlsEditMission(false);
+//        showControlsEditMission(false);
 
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -103,6 +103,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         map_.getUiSettings().setScrollGesturesEnabled(true);
         map_.setOnMarkerDragListener(this);
         map_.setOnMarkerClickListener(this);
+        setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        setMapToPosition(homePos_);
+        setMapZoom(15);
 
         addCopterMarker();
 
@@ -116,9 +119,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         WaypointMarker wpMarker = new WaypointMarker(getLayoutInflater());
         map_.setInfoWindowAdapter(wpMarker);
 
-        waypointPlanner_.setMap(map_);
+        waypointOverlay_.setMap(map_);
         missonPlan_ = mavlin_.createEmptyMissionPlan();
-        waypointPlanner_.setMissionPlan(missonPlan_);
+        waypointOverlay_.setMissionPlan(missonPlan_);
     }
 
     private void addCopterMarker() {
@@ -180,7 +183,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void updateWaypoints() {
-        waypointPlanner_.update();
+        waypointOverlay_.update();
     }
 
     @Override
@@ -224,6 +227,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.action_edit_mission:
                 toggleControlsEditMission();
                 return true;
+            case R.id.action_send_wp:
+                sendWaypointsToCopter();
+                return true;
+            case R.id.action_receive_wp:
+                getApp().requestMissionFromCopter();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -260,8 +269,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             try {
                 InputStream inputStream = getContentResolver().openInputStream(uri);
                 missonPlan_ = mavlin_.loadMission(inputStream);
-                waypointPlanner_.setMissionPlan(missonPlan_);
-                LatLngBounds llb = waypointPlanner_.getWaypointBounds(missonPlan_);
+                waypointOverlay_.setMissionPlan(missonPlan_);
+                LatLngBounds llb = waypointOverlay_.getWaypointBounds(missonPlan_);
                 if (llb != null) {
                     setMapToRegion(llb);
                 }
@@ -324,7 +333,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void clearMission() {
         selectedWaypoint_ = null;
         missonPlan_ = mavlin_.createEmptyMissionPlan();
-        waypointPlanner_.setMissionPlan(missonPlan_);
+        waypointOverlay_.setMissionPlan(missonPlan_);
         updateWaypoints();
     }
 
@@ -336,6 +345,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
+    void setMapToPosition(LatLng ll) {
+        if (ll != null) {
+            CameraUpdate cu = CameraUpdateFactory.newLatLng(ll);
+            map_.moveCamera(cu);
+        }
+    }
+
+    void setMapZoom(float zoom) {
+        CameraUpdate cu = CameraUpdateFactory.zoomTo(zoom);
+        map_.moveCamera(cu);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -345,8 +366,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             try {
                 InputStream inputStream = getContentResolver().openInputStream(uri);
                 missonPlan_ = mavlin_.loadMission(inputStream);
-                waypointPlanner_.setMissionPlan(missonPlan_);
-                LatLngBounds llb = waypointPlanner_.getWaypointBounds(missonPlan_);
+                waypointOverlay_.setMissionPlan(missonPlan_);
+                LatLngBounds llb = waypointOverlay_.getWaypointBounds(missonPlan_);
                 if (llb != null) {
                     setMapToRegion(llb);
                 }
@@ -361,23 +382,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (selectedWaypoint_ != null) {
             selectedWaypoint_.setLatLng(ll);
         } else {
-            waypointPlanner_.addWaypoint(ll, altitude);
+            waypointOverlay_.addWaypoint(ll, altitude);
         }
         updateWaypoints();
     }
 
     public void onBtnDeleteWP(View v) {
-        waypointPlanner_.deleteWaypoint(selectedWaypoint_);
+        waypointOverlay_.deleteWaypoint(selectedWaypoint_);
         updateWaypoints();
     }
 
     public void onBtnMoveUpWP(View v) {
-        waypointPlanner_.moveUpWaypoint(selectedWaypoint_);
+        waypointOverlay_.moveUpWaypoint(selectedWaypoint_);
         updateWaypoints();
     }
 
     public void onBtnMoveDownWP(View v) {
-        waypointPlanner_.moveDownWaypoint(selectedWaypoint_);
+        waypointOverlay_.moveDownWaypoint(selectedWaypoint_);
         updateWaypoints();
     }
 
@@ -476,9 +497,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 txt += "3D fix: ";
             else
                 txt += "no fix: ";
-            txt +=  + getData().gpsNumSats + " sats";
+            txt +=  + getData().gpsNumSats + " sats, ";
+            txt += "sonar: " + getData().sonarAltitude;
+            txt += ", alt:" + getData().altitude;
 
             ((TextView)findViewById(R.id.tvStatus)).setText(txt);
+
+            if (getApp().getMsp().rxWaypointListReady) {
+                getApp().getMsp().rxWaypointListReady = false;
+                updateReceivedWayPointList(getApp().getMsp().rxWaypointList);
+            }
+
+
             _handlerUpdateUI.postDelayed(this, Const.refreshRateUI);
         }
     };
@@ -499,4 +529,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     };
 
+    private void sendWaypointsToCopter() {
+        WaypointList wpl = new WaypointList();
+        wpl.createFromMavlinkMissionPlan(missonPlan_);
+        wpl.upload();
+    }
+
+    private void updateReceivedWayPointList(WaypointList list) {
+        waypointOverlay_.lineCopter_.clear();
+
+        for(Waypoint wp : list.list_) {
+            waypointOverlay_.lineCopter_.add(wp.getLatLng());
+        }
+
+        waypointOverlay_.lineCopter_.update(map_);
+    }
 }

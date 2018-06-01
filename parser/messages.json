@@ -24,9 +24,15 @@
     {"accCalibrationArmingFlags": "byte"}
   ]
 ,
-  "MSP_SONAR_ALTITUDE": [{"ID": 58},
+"MSP_SONAR_ALTITUDE": [{"ID": 58},
     {"comment": ""},
     {"altitude": "int"}
+  ]
+,
+"MSP_ALTITUDE": [{"ID": 109},
+    {"comment": ""},
+    {"altitude": "int"},
+    {"velocity": "short"}
   ]
 ,
   "MSP_RAW_GPS": [{"ID": 106},
@@ -69,8 +75,30 @@
     {"comment": ""},
     {"data": "ByteBuffer"}
   ]
-
-
-
-
+,
+  "MSP_WP": [{"ID": 118},
+    {"comment": ""},
+    {"nr": "byte"},
+    {"action": "byte"},
+    {"lat": "int"},
+    {"lon": "int"},
+    {"alt": "int"},
+    {"p1": "short"},
+    {"p2": "short"},
+    {"p3": "short"},
+    {"flags": "byte"}
+  ]
+,
+  "MSP_SET_WP": [{"ID": 209},
+    {"comment": ""},
+    {"nr": "byte"},
+    {"action": "byte"},
+    {"lat": "int"},
+    {"lon": "int"},
+    {"alt": "int"},
+    {"p1": "short"},
+    {"p2": "short"},
+    {"p3": "short"},
+    {"flags": "byte"}
+  ]
 }

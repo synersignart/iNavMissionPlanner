@@ -85,6 +85,7 @@ public class App {
 
                 request(msp_.serialize_MSP_STATUS_Request());
                 request(msp_.serialize_MSP_SONAR_ALTITUDE_Request());
+                request(msp_.serialize_MSP_ALTITUDE_Request());
                 request(msp_.serialize_MSP_RAW_GPS_Request());
                 request(msp_.serialize_MSP_RC_Request());
             }
@@ -146,4 +147,11 @@ public class App {
     Thread threadCyclicRequest_ = null;
     Thread threadSender_ = null;
     Thread threadReceiver_ = null;
+
+    void requestMissionFromCopter() {
+        request(msp_.serialize_MSP_WP_2((byte)0));
+/*        request(msp_.serialize_MSP_WP_2((byte)1));
+        request(msp_.serialize_MSP_WP_2((byte)2));
+        request(msp_.serialize_MSP_WP_2((byte)3));*/
+    }
 }

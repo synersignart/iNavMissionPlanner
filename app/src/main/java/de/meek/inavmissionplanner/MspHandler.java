@@ -6,12 +6,14 @@ import android.os.Message;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import edu.wlu.cs.msppg.MSP_ALTITUDE_Handler;
 import edu.wlu.cs.msppg.MSP_MODE_RANGES_Handler;
 import edu.wlu.cs.msppg.MSP_RAW_GPS_Handler;
 import edu.wlu.cs.msppg.MSP_RC_Handler;
 import edu.wlu.cs.msppg.MSP_SET_MODE_RANGE_Handler;
 import edu.wlu.cs.msppg.MSP_SONAR_ALTITUDE_Handler;
 import edu.wlu.cs.msppg.MSP_STATUS_Handler;
+import edu.wlu.cs.msppg.MSP_WP_Handler;
 import edu.wlu.cs.msppg.Parser;
 
 public class MspHandler extends Parser implements
@@ -20,7 +22,9 @@ public class MspHandler extends Parser implements
         MSP_RAW_GPS_Handler,
         MSP_RC_Handler,
         MSP_SET_MODE_RANGE_Handler,
-        MSP_MODE_RANGES_Handler
+        MSP_MODE_RANGES_Handler,
+        MSP_WP_Handler,
+        MSP_ALTITUDE_Handler
 {
 
     public boolean accPresent = false;
@@ -30,6 +34,7 @@ public class MspHandler extends Parser implements
     public boolean sonarPresent = false;
     public short cycleTime = 0;
     public int sonarAltitude = 0;
+    public int altitude = 0;
     public byte gpsNumSats = 0;
     public boolean gpsFix2d = false;
     public boolean gpsFix3d = false;
@@ -45,6 +50,8 @@ public class MspHandler extends Parser implements
     public short rcAux4 = 0;
 
     public ArrayList<BoxMode> boxModeList = new ArrayList<>();
+    public WaypointList rxWaypointList = new WaypointList();
+    public boolean rxWaypointListReady = false;
 
     public MspHandler() {
         set_MSP_STATUS_Handler(this);
@@ -52,6 +59,8 @@ public class MspHandler extends Parser implements
         set_MSP_RAW_GPS_Handler(this);
         set_MSP_RC_Handler(this);
         set_MSP_MODE_RANGES_Handler(this);
+        set_MSP_WP_Handler(this);
+        set_MSP_ALTITUDE_Handler(this);
     }
 
     @Override
@@ -122,5 +131,68 @@ public class MspHandler extends Parser implements
     public void registerModeRangeCB(Handler h)
     {
         this.h = h;
+    }
+
+    @Override
+    public void handle_MSP_WP(byte nr, byte action, int lat, int lon, int alt, short p1, short p2, short p3, byte flags) {
+        rxWaypointList.add(nr, action, lat, lon, alt, p1, p2, p3, flags);
+
+        if (nr > 0 && (flags & Waypoint.FLAG_LAST) != 0) {
+            //App.getInstance().updateReceivedWayPointList(rxWaypointList);
+            rxWaypointListReady = true;
+        } else {
+           App.getInstance().request(App.getInstance().getMsp().serialize_MSP_WP_2((byte)(nr+1)));
+
+        }
+
+    }
+
+
+/*
+    public byte [] serialize_MSP_WP_2(byte nr) {
+
+        ByteBuffer bb = newByteBuffer(1);
+
+        bb.put(nr);
+
+        byte [] message = new byte[10];
+        message[0] = 36;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)118;
+        message[5] = (byte)0;
+        message[6] = 1;
+        message[7] = 0;
+        byte [] data = bb.array();
+        int k;
+        for (k=0; k<data.length; ++k) {
+            message[k+8] = data[k];
+        }
+
+        message[9] = CRC_dvb_s2(message, 3, 9);
+
+        return message;
+    }*/
+
+    public byte [] serialize_MSP_WP_2(byte nr) {
+
+        rxWaypointListReady = false;
+        byte [] message = new byte[7];
+
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
+        message[3] = 1;
+        message[4] = (byte)118;
+        message[5] = nr;
+        message[6] = CRC8(message, 3,6);
+
+        return message;
+    }
+
+    @Override
+    public void handle_MSP_ALTITUDE(int altitude, short velocity) {
+        this.altitude = altitude;
     }
 }

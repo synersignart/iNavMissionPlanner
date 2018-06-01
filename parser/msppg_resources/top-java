@@ -20,13 +20,13 @@ public class Parser {
         this.message_buffer = new ByteArrayOutputStream();
     }
 
-    private static ByteBuffer newByteBuffer(int capacity) {
+    protected static ByteBuffer newByteBuffer(int capacity) {
         ByteBuffer bb = ByteBuffer.allocate(capacity);
         bb.order(ByteOrder.LITTLE_ENDIAN);
         return bb;
     }
 
-   private static byte CRC8(byte [] data, int beg, int end) {
+   protected static byte CRC8(byte [] data, int beg, int end) {
 
         int crc = 0x00;
 
@@ -40,7 +40,7 @@ public class Parser {
         return (byte)crc;
     }
 
-    private static byte CRC_dvb_s2(byte [] data, int beg, int end) {
+    protected static byte CRC_dvb_s2(byte [] data, int beg, int end) {
         int crc = 0;
         for (int k=beg; k<end; ++k) {
 

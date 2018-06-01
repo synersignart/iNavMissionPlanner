@@ -16,27 +16,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WaypointPlanner {
+public class WaypointOverlay {
 
-    Polyline polyline_ = null;
-    int polyColor_ = Color.DKGRAY;
+    WaypointLine lineEdit_ = new WaypointLine(Color.DKGRAY, null);
+    WaypointLine lineCopter_ = new WaypointLine(Color.RED, WaypointLine.PATTERN_POLYGON_ALPHA);
     HashMap<Mavlink.MissionItem, Marker> markers_ = new HashMap<>();
-    ArrayList<LatLng> waypointPolylist_ = new ArrayList<LatLng>();
+//    ArrayList<LatLng> waypointPolylist_ = new ArrayList<LatLng>();
     Mavlink.MissionPlan plan_ = null;
     GoogleMap map_ = null;
-
-
-    void updatePolyline(GoogleMap map)
-    {
-        if(null == polyline_)
-        {
-            PolylineOptions rectOptions = new PolylineOptions();
-            rectOptions.color(polyColor_);
-            polyline_ = map.addPolyline(rectOptions);
-        }
-        polyline_.setPoints(waypointPolylist_);
-    }
-
 
     private void setWaypointMarker(Mavlink.MissionItem wp, int i, GoogleMap map) {
 
@@ -105,7 +92,7 @@ public class WaypointPlanner {
             case Mavlink.MissionItem.MAV_CMD_NAV_WAYPOINT:
             case Mavlink.MissionItem.MAV_CMD_NAV_TAKEOFF: {
 
-                waypointPolylist_.add(wp.getLatLng());
+                lineEdit_.add(wp.getLatLng());
                 setWaypointMarker(wp, i, map);
             } return true;
             default:
@@ -122,7 +109,7 @@ public class WaypointPlanner {
     }
 
     public void update() {
-        waypointPolylist_.clear();
+        lineEdit_.clear();
         deleteAllMarkers();
         if((map_ != null) && (plan_ != null)) {
             int i=0;
@@ -131,7 +118,7 @@ public class WaypointPlanner {
                     i++;
                 }
             }
-            updatePolyline(map_);
+            lineEdit_.update(map_);
         }
     }
 

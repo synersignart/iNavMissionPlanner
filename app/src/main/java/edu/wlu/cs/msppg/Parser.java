@@ -22,13 +22,13 @@ public class Parser {
         this.message_buffer = new ByteArrayOutputStream();
     }
 
-    private static ByteBuffer newByteBuffer(int capacity) {
+    protected static ByteBuffer newByteBuffer(int capacity) {
         ByteBuffer bb = ByteBuffer.allocate(capacity);
         bb.order(ByteOrder.LITTLE_ENDIAN);
         return bb;
     }
 
-   private static byte CRC8(byte [] data, int beg, int end) {
+   protected static byte CRC8(byte [] data, int beg, int end) {
 
         int crc = 0x00;
 
@@ -42,7 +42,7 @@ public class Parser {
         return (byte)crc;
     }
 
-    private static byte CRC_dvb_s2(byte [] data, int beg, int end) {
+    protected static byte CRC_dvb_s2(byte [] data, int beg, int end) {
         int crc = 0;
         for (int k=beg; k<end; ++k) {
 
@@ -138,6 +138,21 @@ public class Parser {
                             }
                             break;
 
+                        case (byte)118:
+                            if (this.MSP_WP_handler != null) {
+                                this.MSP_WP_handler.handle_MSP_WP(
+                                bb.get(0),
+                                bb.get(1),
+                                bb.getInt(2),
+                                bb.getInt(6),
+                                bb.getInt(10),
+                                bb.getShort(14),
+                                bb.getShort(16),
+                                bb.getShort(18),
+                                bb.get(20));
+                            }
+                            break;
+
                         case (byte)150:
                             if (this.MSP_STATUS_EX_handler != null) {
                                 this.MSP_STATUS_EX_handler.handle_MSP_STATUS_EX(
@@ -173,6 +188,14 @@ public class Parser {
                                 bb.getShort(8),
                                 bb.getShort(10),
                                 bb.getShort(12));
+                            }
+                            break;
+
+                        case (byte)109:
+                            if (this.MSP_ALTITUDE_handler != null) {
+                                this.MSP_ALTITUDE_handler.handle_MSP_ALTITUDE(
+                                bb.getInt(0),
+                                bb.getShort(4));
                             }
                             break;
 
@@ -265,6 +288,62 @@ public class Parser {
         }
 
         message[19] = CRC_dvb_s2(message, 3, 19);
+
+        return message;
+    }
+
+    private MSP_WP_Handler MSP_WP_handler;
+
+    public void set_MSP_WP_Handler(MSP_WP_Handler handler) {
+
+        this.MSP_WP_handler = handler;
+    }
+
+    public byte [] serialize_MSP_WP_Request() {
+
+
+        byte [] message = new byte[6];
+
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)118;
+        message[5] = (byte)118;
+
+        return message;
+    }
+
+    public byte [] serialize_MSP_WP(byte nr, byte action, int lat, int lon, int alt, short p1, short p2, short p3, byte flags) {
+
+        ByteBuffer bb = newByteBuffer(21);
+
+        bb.put(nr);
+        bb.put(action);
+        bb.putInt(lat);
+        bb.putInt(lon);
+        bb.putInt(alt);
+        bb.putShort(p1);
+        bb.putShort(p2);
+        bb.putShort(p3);
+        bb.put(flags);
+
+        byte [] message = new byte[30];
+        message[0] = 36;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)118;
+        message[5] = (byte)0;
+        message[6] = 21;
+        message[7] = 0;
+        byte [] data = bb.array();
+        int k;
+        for (k=0; k<data.length; ++k) {
+            message[k+8] = data[k];
+        }
+
+        message[29] = CRC_dvb_s2(message, 3, 29);
 
         return message;
     }
@@ -455,6 +534,55 @@ public class Parser {
         return message;
     }
 
+    private MSP_ALTITUDE_Handler MSP_ALTITUDE_handler;
+
+    public void set_MSP_ALTITUDE_Handler(MSP_ALTITUDE_Handler handler) {
+
+        this.MSP_ALTITUDE_handler = handler;
+    }
+
+    public byte [] serialize_MSP_ALTITUDE_Request() {
+
+
+        byte [] message = new byte[6];
+
+        message[0] = 36; // 0x24
+        message[1] = 77; // 0x4D
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)109;
+        message[5] = (byte)109;
+
+        return message;
+    }
+
+    public byte [] serialize_MSP_ALTITUDE(int altitude, short velocity) {
+
+        ByteBuffer bb = newByteBuffer(6);
+
+        bb.putInt(altitude);
+        bb.putShort(velocity);
+
+        byte [] message = new byte[15];
+        message[0] = 36;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)109;
+        message[5] = (byte)0;
+        message[6] = 6;
+        message[7] = 0;
+        byte [] data = bb.array();
+        int k;
+        for (k=0; k<data.length; ++k) {
+            message[k+8] = data[k];
+        }
+
+        message[14] = CRC_dvb_s2(message, 3, 14);
+
+        return message;
+    }
+
     private MSP_LOOP_TIME_Handler MSP_LOOP_TIME_handler;
 
     public void set_MSP_LOOP_TIME_Handler(MSP_LOOP_TIME_Handler handler) {
@@ -629,4 +757,38 @@ public class Parser {
     }
 
     // not generated: public byte [] serialize_MSP_MODE_RANGES
+    public byte [] serialize_MSP_SET_WP(byte nr, byte action, int lat, int lon, int alt, short p1, short p2, short p3, byte flags) {
+
+        ByteBuffer bb = newByteBuffer(21);
+
+        bb.put(nr);
+        bb.put(action);
+        bb.putInt(lat);
+        bb.putInt(lon);
+        bb.putInt(alt);
+        bb.putShort(p1);
+        bb.putShort(p2);
+        bb.putShort(p3);
+        bb.put(flags);
+
+        byte [] message = new byte[30];
+        message[0] = 36;
+        message[1] = 88;
+        message[2] = 60; // 0x3C => Request
+        message[3] = 0;
+        message[4] = (byte)209;
+        message[5] = (byte)0;
+        message[6] = 21;
+        message[7] = 0;
+        byte [] data = bb.array();
+        int k;
+        for (k=0; k<data.length; ++k) {
+            message[k+8] = data[k];
+        }
+
+        message[29] = CRC_dvb_s2(message, 3, 29);
+
+        return message;
+    }
+
 }
